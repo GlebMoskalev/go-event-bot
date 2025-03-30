@@ -1,7 +1,6 @@
 package bot
 
 import (
-	"fmt"
 	"github.com/GlebMoskalev/go-event-bot/internal/config"
 	"github.com/GlebMoskalev/go-event-bot/internal/services"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -41,7 +40,16 @@ func (b *Bot) Start(cfg config.Config) {
 
 		mes := update.Message
 
-		fmt.Println(b.botService.CheckUser(update))
+		existsUser, err := b.botService.CheckUser(update)
+		if err != nil {
+			continue
+		}
+
+		if !existsUser && !(mes.IsCommand() && mes.Command() == "start") && mes.Contact == nil {
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Нужно выполнить команду /start")
+			b.botService.SendMessage(msg, b.log)
+			continue
+		}
 
 		switch {
 		case mes.IsCommand():
