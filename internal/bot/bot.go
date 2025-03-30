@@ -46,8 +46,7 @@ func (b *Bot) Start(cfg config.Config) {
 		}
 
 		if !existsUser && !(mes.IsCommand() && mes.Command() == "start") && mes.Contact == nil {
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Нужно выполнить команду /start")
-			b.botService.SendMessage(msg, b.log)
+			b.botService.SendMessage(update.Message.Chat.ID, "Нужно выполнить команду /start", nil)
 			continue
 		}
 
