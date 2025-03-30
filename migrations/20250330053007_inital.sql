@@ -3,7 +3,6 @@
 SELECT 'up SQL query';
 CREATE TABLE users (
     telegram_id BIGINT,
-    chat_id BIGINT,
     firstname VARCHAR(30),
     lastname  varchar(30),
     patronymic varchar(30)

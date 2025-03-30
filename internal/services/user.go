@@ -12,7 +12,7 @@ import (
 type UserService interface {
 	Get(ctx context.Context, telegramID int64) (models.User, error)
 	Create(ctx context.Context, user models.User) error
-	ExistsUserByChatID(ctx context.Context, chatID int64) (bool, error)
+	ExistsUserByTelegramID(ctx context.Context, telegramID int64) (bool, error)
 }
 
 type userService struct {
@@ -54,13 +54,13 @@ func (s *userService) Create(ctx context.Context, user models.User) error {
 	return nil
 }
 
-func (s *userService) ExistsUserByChatID(ctx context.Context, chatID int64) (bool, error) {
-	log := s.log.With("layer", "service_user", "operation", "ExistsUserByChatID", "chat_id", chatID)
-	log.Info("checking user existence by chat_id")
+func (s *userService) ExistsUserByTelegramID(ctx context.Context, telegramID int64) (bool, error) {
+	log := s.log.With("layer", "service_user", "operation", "ExistsUserByTelegramID", "telegram_id", telegramID)
+	log.Info("checking user existence by telegram_id")
 
-	exists, err := s.repo.ExistsUserByChatID(ctx, chatID)
+	exists, err := s.repo.ExistsUserByTelegramID(ctx, telegramID)
 	if err != nil {
-		log.Error("failed to check user in repository", "error", err)
+		log.Error("failed to check user in repository by telegram_id", "error", err)
 		return false, err
 	}
 	return exists, nil

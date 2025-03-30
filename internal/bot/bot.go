@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"fmt"
 	"github.com/GlebMoskalev/go-event-bot/internal/config"
 	"github.com/GlebMoskalev/go-event-bot/internal/services"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -38,6 +39,9 @@ func (b *Bot) Start(cfg config.Config) {
 		}
 
 		mes := update.Message
+
+		fmt.Println(b.botService.CheckUser(bot, update))
+
 		switch {
 		case mes.IsCommand():
 			b.Commands(bot, update)
