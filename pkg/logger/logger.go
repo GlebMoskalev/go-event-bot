@@ -23,7 +23,7 @@ func NewLogger(appEnv string) *slog.Logger {
 		log = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelWarn}))
 	default:
 		log = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
-		log.Warn(fmt.Sprintf("Unknown APP_ENV value '%s', falling back to default configuration", appEnv))
+		log.Warn(fmt.Sprintf("unknown APP_ENV value '%s', falling back to default configuration", appEnv))
 	}
 	return log
 }

@@ -10,7 +10,8 @@ import (
 type Config struct {
 	AppEnv string `env:"APP_ENV,notEmpty"`
 	Bot    struct {
-		Token string `env:"BOT_TOKEN,notEmpty"`
+		Token         string `env:"BOT_TOKEN,notEmpty"`
+		UpdateTimeout int    `env:"UPDATE_TIMEOUT,notEmpty"`
 	}
 	TgBotDb struct {
 		Host     string `env:"POSTGRES_TG_BOT_HOST,notEmpty"`

@@ -22,6 +22,7 @@ func colorize(color, text string) string {
 
 type prettySlog struct {
 	minLevel slog.Level
+	attrs    []slog.Attr
 }
 
 func newPrettySlog(minLevel slog.Level) *prettySlog {
@@ -52,6 +53,9 @@ func (s *prettySlog) Handle(_ context.Context, r slog.Record) error {
 	timeStr := r.Time.Format("15:04:05.000")
 
 	attrs := ""
+	for _, a := range s.attrs {
+		attrs += fmt.Sprintf(" %s=%v", a.Key, a.Value.Any())
+	}
 	r.Attrs(func(a slog.Attr) bool {
 		attrs += fmt.Sprintf(" %s=%v", a.Key, a.Value.Any())
 		return true
@@ -67,7 +71,9 @@ func (s *prettySlog) Handle(_ context.Context, r slog.Record) error {
 }
 
 func (s *prettySlog) WithAttrs(attrs []slog.Attr) slog.Handler {
-	return s
+	newHandler := *s
+	newHandler.attrs = append(newHandler.attrs, attrs...)
+	return &newHandler
 }
 
 func (s *prettySlog) WithGroup(name string) slog.Handler {
