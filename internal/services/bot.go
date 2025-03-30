@@ -11,61 +11,67 @@ import (
 )
 
 type BotService interface {
-	Start(bot *tgbotapi.BotAPI, update tgbotapi.Update)
-	RequestContact(bot *tgbotapi.BotAPI, update tgbotapi.Update)
-	CheckUser(bot *tgbotapi.BotAPI, update tgbotapi.Update) bool
+	Start(update tgbotapi.Update)
+	RequestContact(update tgbotapi.Update)
+	CheckUser(update tgbotapi.Update) bool
+	SetBot(bot *tgbotapi.BotAPI)
 }
 
 type botService struct {
 	log          *slog.Logger
 	staffService StaffService
 	userService  UserService
+	api          *tgbotapi.BotAPI
 }
 
 func NewBotService(staffService StaffService, userService UserService, log *slog.Logger) BotService {
 	return &botService{staffService: staffService, userService: userService, log: log}
 }
 
-func sendErrorNotification(bot *tgbotapi.BotAPI, chatID int64, log *slog.Logger) {
-	msg := tgbotapi.NewMessage(chatID, "Произошла ошибка! Бот может работать некорректно")
-	sendMessage(bot, msg, log)
+func (b *botService) SetBot(bot *tgbotapi.BotAPI) {
+	b.api = bot
 }
 
-func sendMessage(bot *tgbotapi.BotAPI, msg tgbotapi.MessageConfig, log *slog.Logger) {
-	_, err := bot.Send(msg)
+func (b *botService) sendErrorNotification(chatID int64, log *slog.Logger) {
+	msg := tgbotapi.NewMessage(chatID, "Произошла ошибка! Бот может работать некорректно")
+	b.sendMessage(msg, log)
+}
+
+func (b *botService) sendMessage(msg tgbotapi.MessageConfig, log *slog.Logger) {
+	_, err := b.api.Send(msg)
 	if err != nil {
 		log.Error("failed to send message", "error", err)
 	}
 }
 
-func (b *botService) CheckUser(bot *tgbotapi.BotAPI, update tgbotapi.Update) bool {
+func (b *botService) CheckUser(update tgbotapi.Update) bool {
 	chatID := update.Message.Chat.ID
 	log := b.log.With("layer", "service_bot", "operation", "CheckUser", "chat_id", chatID)
 	log.Info("check user")
 
 	exists, err := b.userService.ExistsUserByTelegramID(context.Background(), update.Message.From.ID)
 	if err != nil {
-		sendErrorNotification(bot, chatID, log)
+		b.sendErrorNotification(chatID, log)
 		return false
 	}
 
 	return exists
 }
 
-func (b *botService) Start(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
+func (b *botService) Start(update tgbotapi.Update) {
 	chatID := update.Message.Chat.ID
 	log := b.log.With("layer", "service_bot", "operation", "RequestContact", "chat_id", chatID)
 	log.Info("start")
 
-	if b.CheckUser(bot, update) {
+	if b.CheckUser(update) {
 		user, err := b.userService.Get(context.Background(), update.Message.From.ID)
 		if err != nil {
 			log.Error("failed to get user")
-			sendErrorNotification(bot, chatID, log)
+			b.sendErrorNotification(chatID, log)
 			return
 		}
 		msg := tgbotapi.NewMessage(chatID, fmt.Sprintf("Привет, %s %s", user.FirstName, user.Patronymic))
-		sendMessage(bot, msg, log)
+		b.sendMessage(msg, log)
 		return
 	}
 
@@ -73,24 +79,24 @@ func (b *botService) Start(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 	msg.ReplyMarkup = tgbotapi.NewReplyKeyboard([]tgbotapi.KeyboardButton{
 		tgbotapi.NewKeyboardButtonContact("Отправить контакт"),
 	})
-	sendMessage(bot, msg, log)
+	b.sendMessage(msg, log)
 }
 
-func (b *botService) RequestContact(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
+func (b *botService) RequestContact(update tgbotapi.Update) {
 	chatID := update.Message.Chat.ID
 	log := b.log.With("layer", "service_bot", "operation", "RequestContact", "chat_id", chatID)
 
 	exists, err := b.userService.ExistsUserByTelegramID(context.Background(), update.Message.From.ID)
 	if err != nil {
 		log.Error("failed to check user in service", "error", err)
-		sendErrorNotification(bot, chatID, log)
+		b.sendErrorNotification(chatID, log)
 		return
 	}
 
 	if exists {
 		msg := tgbotapi.NewMessage(chatID, "Твой контакт у нас уже есть")
 		msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(false)
-		sendMessage(bot, msg, log)
+		b.sendMessage(msg, log)
 		return
 	}
 
@@ -101,7 +107,7 @@ func (b *botService) RequestContact(bot *tgbotapi.BotAPI, update tgbotapi.Update
 			log.Error("invalid phone number", "phone_number", phoneNumber)
 			msg := tgbotapi.NewMessage(chatID, "Ваш номер телефона не соответствует нашему формату")
 			msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(false)
-			sendMessage(bot, msg, log)
+			b.sendMessage(msg, log)
 			return
 		}
 
@@ -109,13 +115,13 @@ func (b *botService) RequestContact(bot *tgbotapi.BotAPI, update tgbotapi.Update
 			log.Warn("user not found in staff", "phone_number", phoneNumber)
 			msg := tgbotapi.NewMessage(chatID, "Вас нет в списках, попросите администратора добавить вас")
 			msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(false)
-			sendMessage(bot, msg, log)
+			b.sendMessage(msg, log)
 			return
 		}
 
 		log.Error("failed to get staff in service", "error", err)
 
-		sendErrorNotification(bot, chatID, log)
+		b.sendErrorNotification(chatID, log)
 		return
 	}
 
@@ -127,12 +133,15 @@ func (b *botService) RequestContact(bot *tgbotapi.BotAPI, update tgbotapi.Update
 	})
 
 	if err != nil {
-		sendErrorNotification(bot, chatID, log)
+		b.sendErrorNotification(chatID, log)
 		return
 	}
 
-	msg := tgbotapi.NewMessage(chatID, "Приветствуем на нашем мероприятии!")
+	msg := tgbotapi.NewMessage(chatID, fmt.Sprintf("Приветствуем %s %s на нашем мероприятии!",
+		staff.FirstName,
+		staff.Patronymic),
+	)
 	msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(false)
-	sendMessage(bot, msg, log)
+	b.sendMessage(msg, log)
 	return
 }

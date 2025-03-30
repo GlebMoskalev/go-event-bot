@@ -25,6 +25,7 @@ func (b *Bot) Start(cfg config.Config) {
 		os.Exit(1)
 	}
 	b.log.Info("initial bot")
+	b.botService.SetBot(bot)
 
 	bot.Debug = true
 
@@ -40,13 +41,13 @@ func (b *Bot) Start(cfg config.Config) {
 
 		mes := update.Message
 
-		fmt.Println(b.botService.CheckUser(bot, update))
+		fmt.Println(b.botService.CheckUser(update))
 
 		switch {
 		case mes.IsCommand():
 			b.Commands(bot, update)
 		case mes.Contact != nil:
-			b.botService.RequestContact(bot, update)
+			b.botService.RequestContact(update)
 		default:
 			b.Messages(bot, update)
 		}
