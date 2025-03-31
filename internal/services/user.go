@@ -13,6 +13,7 @@ type UserService interface {
 	Get(ctx context.Context, telegramID int64) (models.User, error)
 	Create(ctx context.Context, user models.User) error
 	ExistsUserByTelegramID(ctx context.Context, telegramID int64) (bool, error)
+	IsAdmin(ctx context.Context, telegramID int64) (bool, error)
 }
 
 type userService struct {
@@ -64,4 +65,17 @@ func (s *userService) ExistsUserByTelegramID(ctx context.Context, telegramID int
 		return false, err
 	}
 	return exists, nil
+}
+
+func (s *userService) IsAdmin(ctx context.Context, telegramID int64) (bool, error) {
+	log := s.log.With("layer", "service_user", "operation", "IsAdmin", "telegram_id", telegramID)
+	log.Info("checking user admin by telegram_id")
+
+	isAdmin, err := s.repo.IsAdmin(ctx, telegramID)
+	if err != nil {
+		log.Error("failed to check user admin in repository by telegram_id", "error", err)
+		return false, err
+	}
+
+	return isAdmin, err
 }

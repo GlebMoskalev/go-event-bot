@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/GlebMoskalev/go-event-bot/internal/bot/commands"
 	"github.com/GlebMoskalev/go-event-bot/internal/models"
 	"github.com/GlebMoskalev/go-event-bot/internal/utils/apperrors"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -14,6 +15,7 @@ type BotService interface {
 	Start(update tgbotapi.Update)
 	RequestContact(update tgbotapi.Update)
 	CheckUser(update tgbotapi.Update) (bool, error)
+	IsAdmin(update tgbotapi.Update) (bool, error)
 	SendMessage(chatID int64, text string, markup any)
 	SetBot(bot *tgbotapi.BotAPI)
 }
@@ -23,6 +25,7 @@ type botService struct {
 	staffService StaffService
 	userService  UserService
 	api          *tgbotapi.BotAPI
+	cmdManger    *commands.CommandManager
 }
 
 func NewBotService(staffService StaffService, userService UserService, log *slog.Logger) BotService {
@@ -31,6 +34,7 @@ func NewBotService(staffService StaffService, userService UserService, log *slog
 
 func (b *botService) SetBot(bot *tgbotapi.BotAPI) {
 	b.api = bot
+	b.cmdManger = commands.NewCommandManger(bot, b.log)
 }
 
 func (b *botService) sendErrorNotification(chatID int64) {
@@ -67,6 +71,20 @@ func (b *botService) CheckUser(update tgbotapi.Update) (bool, error) {
 	return exists, nil
 }
 
+func (b *botService) IsAdmin(update tgbotapi.Update) (bool, error) {
+	telegramID := update.Message.From.ID
+	log := b.log.With("layer", "service_bot", "operation", "IsAdmin", "telegram_id", telegramID)
+	log.Info("check user admin")
+
+	isAdmin, err := b.userService.IsAdmin(context.Background(), telegramID)
+	if err != nil {
+		b.sendErrorNotification(update.Message.Chat.ID)
+		return false, err
+	}
+
+	return isAdmin, nil
+}
+
 func (b *botService) Start(update tgbotapi.Update) {
 	chatID := update.Message.Chat.ID
 	log := b.log.With("layer", "service_bot", "operation", "RequestContact", "chat_id", chatID)
@@ -86,6 +104,7 @@ func (b *botService) Start(update tgbotapi.Update) {
 		}
 		greeting := fmt.Sprintf("Привет, %s %s", user.FirstName, user.Patronymic)
 		b.SendMessage(chatID, greeting, nil)
+
 		return
 	}
 
@@ -108,6 +127,11 @@ func (b *botService) RequestContact(update tgbotapi.Update) {
 
 	if exists {
 		removeKeyboard := tgbotapi.NewRemoveKeyboard(false)
+
+		err = b.cmdManger.SetupCommands(update, false)
+		if err != nil {
+			b.log.Error("failed to setup commands")
+		}
 		b.SendMessage(chatID, "Твой контакт у нас уже есть", removeKeyboard)
 		return
 	}
@@ -135,11 +159,17 @@ func (b *botService) RequestContact(update tgbotapi.Update) {
 		return
 	}
 
+	err = b.cmdManger.SetupCommands(update, false)
+	if err != nil {
+		b.log.Error("failed to setup commands")
+	}
+
 	err = b.userService.Create(context.Background(), models.User{
 		TelegramID: update.Message.Contact.UserID,
 		FirstName:  staff.FirstName,
 		LastName:   staff.LastName,
 		Patronymic: staff.Patronymic,
+		IsAdmin:    false,
 	})
 
 	if err != nil {

@@ -1,6 +1,8 @@
 package bot
 
 import (
+	"github.com/GlebMoskalev/go-event-bot/internal/bot/handlers"
+	"github.com/GlebMoskalev/go-event-bot/internal/bot/middleware"
 	"github.com/GlebMoskalev/go-event-bot/internal/config"
 	"github.com/GlebMoskalev/go-event-bot/internal/services"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -9,8 +11,11 @@ import (
 )
 
 type Bot struct {
-	log        *slog.Logger
-	botService services.BotService
+	log          *slog.Logger
+	botService   services.BotService
+	auth         *middleware.AuthMiddleware
+	baseHandler  *handlers.BaseHandler
+	adminHandler *handlers.AdminHandler
 }
 
 func NewBot(botService services.BotService, log *slog.Logger) *Bot {
@@ -24,7 +29,11 @@ func (b *Bot) Start(cfg config.Config) {
 		os.Exit(1)
 	}
 	b.log.Info("initial bot")
+
 	b.botService.SetBot(bot)
+	b.auth = middleware.NewAuthMiddleWare(b.botService, b.log)
+	b.adminHandler = handlers.NewAdminHandler(b.botService, b.log)
+	b.baseHandler = handlers.NewBaseHandlers(b.botService, b.log)
 
 	bot.Debug = true
 
@@ -32,31 +41,45 @@ func (b *Bot) Start(cfg config.Config) {
 	u.Timeout = cfg.Bot.UpdateTimeout
 
 	updates := bot.GetUpdatesChan(u)
+	cmdCfg := tgbotapi.NewSetMyCommands(
+		tgbotapi.BotCommand{
+			Command:     "start",
+			Description: "Начальная команда",
+		},
+	)
+	bot.Send(cmdCfg)
 
 	for update := range updates {
-		if update.Message == nil {
+		if !b.auth.CheckAuth(update) {
 			continue
 		}
 
-		mes := update.Message
-
-		existsUser, err := b.botService.CheckUser(update)
-		if err != nil {
-			continue
-		}
-
-		if !existsUser && !(mes.IsCommand() && mes.Command() == "start") && mes.Contact == nil {
-			b.botService.SendMessage(update.Message.Chat.ID, "Нужно выполнить команду /start", nil)
-			continue
-		}
-
-		switch {
-		case mes.IsCommand():
-			b.Commands(bot, update)
-		case mes.Contact != nil:
+		if update.Message.Contact != nil {
 			b.botService.RequestContact(update)
-		default:
-			b.Messages(bot, update)
+			continue
 		}
+
+		if update.Message.IsCommand() {
+			b.handleCommand(update)
+			continue
+		}
+
+	}
+}
+
+func (b *Bot) handleCommand(update tgbotapi.Update) {
+	switch update.Message.Command() {
+	case "start":
+		b.baseHandler.HandleStart(update)
+	case "schedule":
+		b.baseHandler.HandleSchedule(update)
+	case "admin":
+		b.adminHandler.HandleAdmin(update)
+	case "change_event":
+		b.adminHandler.HandleChangeEvent(update)
+	case "add_staff":
+		b.adminHandler.HandleAddStaff(update)
+	default:
+		b.botService.SendMessage(update.Message.Chat.ID, "Неизвестная команда", nil)
 	}
 }

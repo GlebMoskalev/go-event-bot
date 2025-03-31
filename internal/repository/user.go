@@ -13,6 +13,7 @@ type UserRepository interface {
 	Get(ctx context.Context, telegramID int64) (models.User, error)
 	Create(ctx context.Context, user models.User) error
 	ExistsUserByTelegramID(ctx context.Context, telegramID int64) (bool, error)
+	IsAdmin(ctx context.Context, telegramID int64) (bool, error)
 }
 
 type userRepo struct {
@@ -32,7 +33,8 @@ func (r *userRepo) Get(ctx context.Context, telegramID int64) (models.User, erro
 	SELECT
 		firstname,
 		lastname,
-		patronymic
+		patronymic,
+		is_admin
 	FROM users
 	WHERE telegram_id = $1
 `
@@ -41,6 +43,7 @@ func (r *userRepo) Get(ctx context.Context, telegramID int64) (models.User, erro
 		&user.FirstName,
 		&user.LastName,
 		&user.Patronymic,
+		&user.IsAdmin,
 	)
 
 	if err != nil {
@@ -63,12 +66,12 @@ func (r *userRepo) Create(ctx context.Context, user models.User) error {
 
 	query := `
 	INSERT INTO users 
-		(telegram_id, firstname, lastname, patronymic) 
+		(telegram_id, firstname, lastname, patronymic, is_admin) 
 	VALUES 
-		($1, $2, $3, $4)
+		($1, $2, $3, $4, $5)
 `
 
-	_, err := r.db.ExecContext(ctx, query, user.TelegramID, user.FirstName, user.LastName, user.Patronymic)
+	_, err := r.db.ExecContext(ctx, query, user.TelegramID, user.FirstName, user.LastName, user.Patronymic, user.IsAdmin)
 	if err != nil {
 		log.Error("failed to create user in database", "error", err)
 		return err
@@ -98,4 +101,24 @@ func (r *userRepo) ExistsUserByTelegramID(ctx context.Context, telegramID int64)
 
 	log.Info("user existence by telegram_id checked successfully")
 	return exists, err
+}
+
+func (r *userRepo) IsAdmin(ctx context.Context, telegramID int64) (bool, error) {
+	log := r.log.With("layer", "repository_user", "operation", "IsAdmin", "telegram_id", telegramID)
+	log.Info("checking user admin by telegram_id")
+
+	var isAdmin bool
+	query := `
+	SELECT 
+	    is_admin
+	FROM users
+	WHERE telegram_id = $1
+`
+
+	err := r.db.QueryRowContext(ctx, query, telegramID).Scan(&isAdmin)
+	if err != nil {
+		log.Error("failed to check user admin by telegram_id", "error", err)
+		return false, err
+	}
+	return isAdmin, nil
 }

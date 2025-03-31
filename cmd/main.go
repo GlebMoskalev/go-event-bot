@@ -53,6 +53,7 @@ func main() {
 	userService := services.NewUserService(userRepo, log)
 
 	botService := services.NewBotService(staffService, userService, log)
+
 	bot := bot2.NewBot(botService, log)
 	bot.Start(cfg)
 }
