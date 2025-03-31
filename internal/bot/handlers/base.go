@@ -20,5 +20,5 @@ func (h *BaseHandler) HandleStart(update tgbotapi.Update) {
 }
 
 func (h *BaseHandler) HandleSchedule(update tgbotapi.Update) {
-	h.botService.SendMessage(update.Message.Chat.ID, "Расписнаие мероприятий...", nil)
+	h.botService.Schedule(update)
 }

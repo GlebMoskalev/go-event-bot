@@ -52,7 +52,10 @@ func main() {
 	userRepo := repository.NewUserRepository(tgBotDb, log)
 	userService := services.NewUserService(userRepo, log)
 
-	botService := services.NewBotService(staffService, userService, log)
+	scheduleRepo := repository.NewScheduleRepository(tgBotDb, log)
+	scheduleService := services.NewScheduleService(scheduleRepo, log)
+
+	botService := services.NewBotService(staffService, userService, scheduleService, log)
 
 	bot := bot2.NewBot(botService, log)
 	bot.Start(cfg)

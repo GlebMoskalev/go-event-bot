@@ -9,6 +9,7 @@ import (
 	"github.com/GlebMoskalev/go-event-bot/internal/utils/apperrors"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log/slog"
+	"strconv"
 )
 
 type BotService interface {
@@ -18,18 +19,20 @@ type BotService interface {
 	IsAdmin(update tgbotapi.Update) (bool, error)
 	SendMessage(chatID int64, text string, markup any)
 	SetBot(bot *tgbotapi.BotAPI)
+	Schedule(update tgbotapi.Update)
 }
 
 type botService struct {
-	log          *slog.Logger
-	staffService StaffService
-	userService  UserService
-	api          *tgbotapi.BotAPI
-	cmdManger    *commands.CommandManager
+	log             *slog.Logger
+	staffService    StaffService
+	userService     UserService
+	api             *tgbotapi.BotAPI
+	cmdManger       *commands.CommandManager
+	scheduleService ScheduleService
 }
 
-func NewBotService(staffService StaffService, userService UserService, log *slog.Logger) BotService {
-	return &botService{staffService: staffService, userService: userService, log: log}
+func NewBotService(staffService StaffService, userService UserService, scheduleService ScheduleService, log *slog.Logger) BotService {
+	return &botService{staffService: staffService, userService: userService, scheduleService: scheduleService, log: log}
 }
 
 func (b *botService) SetBot(bot *tgbotapi.BotAPI) {
@@ -182,4 +185,27 @@ func (b *botService) RequestContact(update tgbotapi.Update) {
 		staff.Patronymic)
 	removeKeyboard := tgbotapi.NewRemoveKeyboard(false)
 	b.SendMessage(chatID, greeting, removeKeyboard)
+}
+
+func (b *botService) Schedule(update tgbotapi.Update) {
+	chatID := update.Message.Chat.ID
+	log := b.log.With("layer", "service_bot", "operation", "Schedule", "chat_id", chatID)
+	schedules, total, err := b.scheduleService.GetAll(0, 5)
+	if err != nil {
+		log.Error("failed to get schedules")
+		b.sendErrorNotification(chatID)
+		return
+	}
+	var keyboardRows [][]tgbotapi.InlineKeyboardButton
+
+	for _, s := range schedules {
+		row := []tgbotapi.InlineKeyboardButton{
+			tgbotapi.NewInlineKeyboardButtonData(s.Title, strconv.Itoa(s.ID)),
+		}
+		keyboardRows = append(keyboardRows, row)
+	}
+
+	inlineKeyboard := tgbotapi.NewInlineKeyboardMarkup(keyboardRows...)
+
+	b.SendMessage(chatID, update.Message.Text, inlineKeyboard)
 }
