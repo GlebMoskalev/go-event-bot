@@ -54,7 +54,7 @@ func (m *CommandManager) SetupCommands(update tgbotapi.Update, isAdmin bool) err
 		commands...,
 	)
 
-	_, err := m.bot.Send(cmgCfgWithScope)
+	_, err := m.bot.Request(cmgCfgWithScope)
 	if err != nil {
 		m.log.Error("failed to set commands", "error", err)
 		return err
