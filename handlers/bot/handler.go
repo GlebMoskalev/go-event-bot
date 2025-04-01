@@ -9,6 +9,7 @@ type handler struct {
 	user         services.User
 	staff        services.Staff
 	command      services.Command
+	callback     services.Callback
 	adminCommand services.AdminCommand
 	message      services.Message
 	schedule     services.Schedule

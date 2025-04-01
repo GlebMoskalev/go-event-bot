@@ -1,4 +1,4 @@
-package command
+package callback
 
 import (
 	"github.com/GlebMoskalev/go-event-bot/repositories"
@@ -6,7 +6,7 @@ import (
 	"log/slog"
 )
 
-type cmd struct {
+type callback struct {
 	db              repositories.DB
 	userService     services.User
 	scheduleService services.Schedule
@@ -17,8 +17,8 @@ func New(
 	db repositories.DB,
 	userSvc services.User,
 	scheduleSvc services.Schedule,
-	log *slog.Logger) services.Command {
-	return &cmd{
+	log *slog.Logger) services.Callback {
+	return &callback{
 		db:              db,
 		userService:     userSvc,
 		scheduleService: scheduleSvc,
