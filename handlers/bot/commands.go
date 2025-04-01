@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/GlebMoskalev/go-event-bot/models"
 	"github.com/GlebMoskalev/go-event-bot/pkg/apperrors"
+	"github.com/GlebMoskalev/go-event-bot/pkg/messages"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
@@ -25,20 +26,20 @@ func (h *handler) Commands(ctx context.Context, tgbot *tgbotapi.BotAPI, update t
 
 	requiredRole, exists := CommandAccess[cmd]
 	if !exists {
-		msg.Text = "Неизвестная команда"
+		msg.Text = messages.UnknownCommand()
 		h.SendMessage(tgbot, msg)
 		return
 	}
 
 	hasRole, err := h.user.HasRole(ctx, telegramID, requiredRole)
 	if err != nil && errors.Is(err, apperrors.ErrNotFoundUser) {
-		msg.Text = "Произошла ошибка!"
+		msg.Text = messages.Error()
 		h.SendMessage(tgbot, msg)
 		return
 	}
 
 	if !hasRole {
-		msg.Text = "У вас нет доступа к этой команде"
+		msg.Text = messages.AccessDenied()
 		h.SendMessage(tgbot, msg)
 		return
 	}

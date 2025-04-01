@@ -3,10 +3,10 @@ package message
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/GlebMoskalev/go-event-bot/models"
 	"github.com/GlebMoskalev/go-event-bot/pkg/apperrors"
 	"github.com/GlebMoskalev/go-event-bot/pkg/keyboards"
+	"github.com/GlebMoskalev/go-event-bot/pkg/messages"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
@@ -16,12 +16,12 @@ func (m *msg) Contact(ctx context.Context, msg tgbotapi.MessageConfig, contact *
 	exists, err := m.userService.ExistsUserByTelegramID(ctx, contact.UserID)
 	if err != nil {
 		log.Error("failed to check user in service", "error", err)
-		msg.Text = "Произошла ошибка!"
+		msg.Text = messages.Error()
 		return msg, err
 	}
 
 	if exists {
-		msg.Text = "Твой контакт у нас уже есть"
+		msg.Text = messages.ContactExists()
 		return msg, nil
 	}
 
@@ -31,20 +31,20 @@ func (m *msg) Contact(ctx context.Context, msg tgbotapi.MessageConfig, contact *
 		if errors.Is(err, apperrors.ErrInvalidPhoneNumber) {
 			log.Error("invalid phone number", "phone_number", phoneNumber)
 			msg.ReplyMarkup = keyboards.RemoveKeyboard()
-			msg.Text = "Ваш номер телефона не соответствует нашему формату"
+			msg.Text = messages.InvalidPhoneNumber()
 			return msg, err
 		}
 
 		if errors.Is(err, apperrors.ErrNotFoundStaff) {
 			log.Warn("user not found in staff", "phone_number", phoneNumber)
 			msg.ReplyMarkup = keyboards.RemoveKeyboard()
-			msg.Text = "Вас нет в списках, попросите администратора добавить вас"
+			msg.Text = messages.StaffNotFound()
 			return msg, err
 		}
 
 		log.Error("failed to get staff in service", "error", err)
 
-		msg.Text = "Произошла ошибка!"
+		msg.Text = messages.Error()
 		return msg, err
 	}
 
@@ -57,11 +57,11 @@ func (m *msg) Contact(ctx context.Context, msg tgbotapi.MessageConfig, contact *
 	})
 
 	if err != nil {
-		msg.Text = "Произошла ошибка!"
+		msg.Text = messages.Error()
 		return msg, err
 	}
 
-	msg.Text = fmt.Sprintf("%s %s, приветствуем на нашем мероприятии!",
+	msg.Text = messages.Welcome(
 		staff.FirstName,
 		staff.Patronymic)
 	msg.ReplyMarkup = keyboards.RemoveKeyboard()
