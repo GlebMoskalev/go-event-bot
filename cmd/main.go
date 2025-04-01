@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"github.com/GlebMoskalev/go-event-bot/config"
+	"github.com/GlebMoskalev/go-event-bot/configs"
 	"github.com/GlebMoskalev/go-event-bot/handlers/bot"
 	"github.com/GlebMoskalev/go-event-bot/pkg/logger"
 	"github.com/GlebMoskalev/go-event-bot/repositories"

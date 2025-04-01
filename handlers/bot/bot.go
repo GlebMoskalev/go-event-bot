@@ -2,9 +2,10 @@ package bot
 
 import (
 	"context"
-	"github.com/GlebMoskalev/go-event-bot/config"
+	"github.com/GlebMoskalev/go-event-bot/configs"
 	"github.com/GlebMoskalev/go-event-bot/handlers"
 	"github.com/GlebMoskalev/go-event-bot/repositories"
+	"github.com/GlebMoskalev/go-event-bot/services/admincommand"
 	"github.com/GlebMoskalev/go-event-bot/services/command"
 	"github.com/GlebMoskalev/go-event-bot/services/message"
 	"github.com/GlebMoskalev/go-event-bot/services/schedule"
@@ -25,14 +26,16 @@ func New(db repositories.DB, log *slog.Logger) handlers.Bot {
 	stf := staff.New(db, log)
 	sched := schedule.New(db, log)
 	cmd := command.New(db, stf, usr, sched, log)
+	adminCmd := admincommand.New(db, stf, usr, sched, log)
 	msg := message.New(db, stf, usr, cmd, log)
 	handler := &handler{
-		user:     usr,
-		staff:    stf,
-		command:  cmd,
-		message:  msg,
-		schedule: sched,
-		log:      log,
+		user:         usr,
+		staff:        stf,
+		command:      cmd,
+		adminCommand: adminCmd,
+		message:      msg,
+		schedule:     sched,
+		log:          log,
 	}
 
 	return &bot{handler: handler, log: log}

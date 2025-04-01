@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"context"
-	"github.com/GlebMoskalev/go-event-bot/config"
+	"github.com/GlebMoskalev/go-event-bot/configs"
 )
 
 type Bot interface {

@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/GlebMoskalev/go-event-bot/config"
+	"github.com/GlebMoskalev/go-event-bot/configs"
 	"github.com/GlebMoskalev/go-event-bot/repositories"
 	_ "github.com/lib/pq"
 	"log/slog"

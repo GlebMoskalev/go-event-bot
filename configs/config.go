@@ -28,7 +28,7 @@ type (
 )
 
 func init() {
-	if err := godotenv.Load(); err != nil {
+	if err := godotenv.Load("configs/.env"); err != nil {
 		slog.Error("No .env file not found")
 		os.Exit(1)
 	}

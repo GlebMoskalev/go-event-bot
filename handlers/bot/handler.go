@@ -6,10 +6,11 @@ import (
 )
 
 type handler struct {
-	user     services.User
-	staff    services.Staff
-	command  services.Command
-	message  services.Message
-	schedule services.Schedule
-	log      *slog.Logger
+	user         services.User
+	staff        services.Staff
+	command      services.Command
+	adminCommand services.AdminCommand
+	message      services.Message
+	schedule     services.Schedule
+	log          *slog.Logger
 }

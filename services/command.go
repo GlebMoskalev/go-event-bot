@@ -9,7 +9,4 @@ type Command interface {
 	Start(ctx context.Context, msg tgbotapi.MessageConfig, telegramID int64) tgbotapi.MessageConfig
 	SetupCommands(msg tgbotapi.MessageConfig, isAdmin bool) tgbotapi.MessageConfig
 	Schedule(ctx context.Context, msg tgbotapi.MessageConfig) tgbotapi.MessageConfig
-	AdminPanel(ctx context.Context, msg tgbotapi.MessageConfig) tgbotapi.MessageConfig
-	AdminChangeEvent(ctx context.Context, msg tgbotapi.MessageConfig) tgbotapi.MessageConfig
-	AdminAddStaff(ctx context.Context, msg tgbotapi.MessageConfig) tgbotapi.MessageConfig
 }

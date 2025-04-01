@@ -6,22 +6,23 @@ import (
 )
 
 func (h *handler) Message(ctx context.Context, tgbot *tgbotapi.BotAPI, update tgbotapi.Update) {
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
-	contact := update.Message.Contact
+	telegramID := update.Message.From.ID
+	chatID := update.Message.Chat.ID
+	msg := tgbotapi.NewMessage(chatID, "")
 
-	existsUser, err := h.user.ExistsUserByTelegramID(ctx, update.Message.From.ID)
-
-	if err != nil {
-		h.log.Error("failed to check user by telegram_id", "error", err)
-	} else if !existsUser && contact == nil {
-		msg.Text = "Нужно выполнить команду /start"
-	} else if contact != nil {
+	if update.Message.Contact != nil {
 		msg = h.message.Contact(ctx, msg, update.Message.Contact)
 	} else {
-		msg.Text = "Привет"
+		textError, err := h.AuthorizeUser(ctx, telegramID, false)
+		if err != nil {
+			msg.Text = textError
+			goto sendMessage
+		}
+		msg.Text = "Привет!"
 	}
 
-	_, err = tgbot.Send(msg)
+sendMessage:
+	_, err := tgbot.Send(msg)
 	if err != nil {
 		h.log.Error("failed to send message: %v", err)
 	}
