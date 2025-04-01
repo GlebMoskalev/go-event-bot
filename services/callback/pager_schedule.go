@@ -3,6 +3,7 @@ package callback
 import (
 	"context"
 	"fmt"
+	"github.com/GlebMoskalev/go-event-bot/models"
 	"github.com/GlebMoskalev/go-event-bot/utils/keyboards"
 	"github.com/GlebMoskalev/go-event-bot/utils/messages"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -21,15 +22,24 @@ func (c *callback) PagerSchedule(ctx context.Context, query *tgbotapi.CallbackQu
 				msg := tgbotapi.NewMessage(query.Message.Chat.ID, messages.Error())
 				return msg
 			}
-			pages := make(map[string]string)
-			pages["Prev"] = fmt.Sprintf("pager:schedule:prev:%d:%d", nextPage, total/5)
-			pages[fmt.Sprintf("%d / %d", nextPage, total/5)] = "number:pages"
+			var paginationButtons []models.PaginationButton
+			paginationButtons = append(paginationButtons, models.PaginationButton{
+				Text: "Prev",
+				Data: fmt.Sprintf("pager:schedule:prev:%d:%d", nextPage, total/5),
+			})
+			paginationButtons = append(paginationButtons, models.PaginationButton{
+				Text: fmt.Sprintf("%d / %d", nextPage, total/5),
+				Data: "number:pages",
+			})
 			if nextPage < maxPage {
-				pages["Next"] = fmt.Sprintf("pager:schedule:next:%d:%d", nextPage, total/5)
+				paginationButtons = append(paginationButtons, models.PaginationButton{
+					Text: "Next",
+					Data: fmt.Sprintf("pager:schedule:next:%d:%d", nextPage, total/5),
+				})
 			}
 
 			msg := tgbotapi.NewEditMessageReplyMarkup(query.Message.Chat.ID, query.Message.MessageID,
-				keyboards.ScheduleInline(schedules, pages))
+				keyboards.ScheduleInline(schedules, paginationButtons))
 			return msg
 		}
 	} else if pagerType == "prev" {
@@ -40,15 +50,26 @@ func (c *callback) PagerSchedule(ctx context.Context, query *tgbotapi.CallbackQu
 				msg := tgbotapi.NewMessage(query.Message.Chat.ID, messages.Error())
 				return msg
 			}
-			pages := make(map[string]string)
+
+			var paginationButtons []models.PaginationButton
+
 			if nextPage > 1 {
-				pages["Prev"] = fmt.Sprintf("pager:schedule:next:%d:%d", nextPage, total/5)
+				paginationButtons = append(paginationButtons, models.PaginationButton{
+					Text: "Prev",
+					Data: fmt.Sprintf("pager:schedule:prev:%d:%d", nextPage, total/5),
+				})
 			}
-			pages[fmt.Sprintf("%d / %d", nextPage, total/5)] = "number:pages"
-			pages["Next"] = fmt.Sprintf("pager:schedule:next:%d:%d", nextPage, total/5)
+			paginationButtons = append(paginationButtons, models.PaginationButton{
+				Text: fmt.Sprintf("%d / %d", nextPage, total/5),
+				Data: "number:pages",
+			})
+			paginationButtons = append(paginationButtons, models.PaginationButton{
+				Text: "Next",
+				Data: fmt.Sprintf("pager:schedule:next:%d:%d", nextPage, total/5),
+			})
 
 			msg := tgbotapi.NewEditMessageReplyMarkup(query.Message.Chat.ID, query.Message.MessageID,
-				keyboards.ScheduleInline(schedules, pages))
+				keyboards.ScheduleInline(schedules, paginationButtons))
 			return msg
 		}
 	}
