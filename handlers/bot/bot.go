@@ -52,6 +52,15 @@ func (b *bot) Start(ctx context.Context, cfg config.App, debugMode bool) error {
 
 	tgbot.Debug = debugMode
 
+	_, err = tgbot.Request(tgbotapi.NewSetMyCommandsWithScope(
+		tgbotapi.NewBotCommandScopeDefault(),
+		command.DefaultCommands...,
+	))
+	if err != nil {
+		b.log.Error("failed to set default commands", "error", err)
+		return err
+	}
+
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = cfg.Bot.UpdateTimeout
 

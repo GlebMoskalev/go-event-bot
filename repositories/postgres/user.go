@@ -17,7 +17,7 @@ func (p *postgres) GetUser(ctx context.Context, telegramID int64) (models.User, 
 		firstname,
 		lastname,
 		patronymic,
-		is_admin
+		role
 	FROM users
 	WHERE telegram_id = $1
 `
@@ -26,7 +26,7 @@ func (p *postgres) GetUser(ctx context.Context, telegramID int64) (models.User, 
 		&user.FirstName,
 		&user.LastName,
 		&user.Patronymic,
-		&user.IsAdmin,
+		&user.Role,
 	)
 
 	if err != nil {
@@ -49,12 +49,12 @@ func (p *postgres) CreateUser(ctx context.Context, user models.User) error {
 
 	query := `
 	INSERT INTO users 
-		(telegram_id, firstname, lastname, patronymic, is_admin) 
+		(telegram_id, firstname, lastname, patronymic, role) 
 	VALUES 
 		($1, $2, $3, $4, $5)
 `
 
-	_, err := p.db.ExecContext(ctx, query, user.TelegramID, user.FirstName, user.LastName, user.Patronymic, user.IsAdmin)
+	_, err := p.db.ExecContext(ctx, query, user.TelegramID, user.FirstName, user.LastName, user.Patronymic, user.Role)
 	if err != nil {
 		log.Error("failed to create user in database", "error", err)
 		return err
@@ -84,24 +84,4 @@ func (p *postgres) ExistsUserByTelegramID(ctx context.Context, telegramID int64)
 
 	log.Info("user existence by telegram_id checked successfully")
 	return exists, err
-}
-
-func (p *postgres) IsAdmin(ctx context.Context, telegramID int64) (bool, error) {
-	log := p.log.With("layer", "repository_user", "operation", "IsAdmin", "telegram_id", telegramID)
-	log.Info("checking user admin by telegram_id")
-
-	var isAdmin bool
-	query := `
-	SELECT 
-	    is_admin
-	FROM users
-	WHERE telegram_id = $1
-`
-
-	err := p.db.QueryRowContext(ctx, query, telegramID).Scan(&isAdmin)
-	if err != nil {
-		log.Error("failed to check user admin by telegram_id", "error", err)
-		return false, err
-	}
-	return isAdmin, nil
 }

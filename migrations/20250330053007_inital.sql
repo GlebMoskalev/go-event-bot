@@ -1,12 +1,13 @@
 -- +goose Up
 -- +goose StatementBegin
+CREATE TYPE role_type AS ENUM ('guest', 'staff','admin');
 SELECT 'up SQL query';
 CREATE TABLE users (
     telegram_id BIGINT PRIMARY KEY,
     firstname VARCHAR(30),
     lastname  varchar(30),
     patronymic varchar(30),
-    is_admin bool
+    role role_type
 );
 CREATE TABLE schedule (
     id SERIAL PRIMARY KEY,
@@ -35,4 +36,5 @@ DROP TABLE user_schedule;
 DROP TABLE users;
 DROP TABLE schedule;
 DROP TABLE staffs;
+DROP TYPE role_type;
 -- +goose StatementEnd

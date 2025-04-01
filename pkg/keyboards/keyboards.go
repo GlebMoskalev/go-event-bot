@@ -7,11 +7,13 @@ import (
 )
 
 func ContactButton() tgbotapi.ReplyKeyboardMarkup {
-	return tgbotapi.NewReplyKeyboard(
+	keyboard := tgbotapi.NewReplyKeyboard(
 		[]tgbotapi.KeyboardButton{
 			tgbotapi.NewKeyboardButtonContact("Отправить контакт"),
 		},
 	)
+	keyboard.OneTimeKeyboard = true
+	return keyboard
 }
 
 func RemoveKeyboard() tgbotapi.ReplyKeyboardRemove {

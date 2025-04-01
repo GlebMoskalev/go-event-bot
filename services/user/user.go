@@ -61,15 +61,23 @@ func (u *user) ExistsUserByTelegramID(ctx context.Context, telegramID int64) (bo
 	return exists, nil
 }
 
-func (u *user) IsAdmin(ctx context.Context, telegramID int64) (bool, error) {
-	log := u.log.With("layer", "service_user", "operation", "IsAdmin", "telegram_id", telegramID)
-	log.Info("checking user admin by telegram_id")
+func (u *user) HasRole(ctx context.Context, telegramID int64, role models.Role) (bool, error) {
+	log := u.log.With("layer", "service_user", "operation", "HasRole", "telegram_id", telegramID, "role", role)
+	log.Info("checking user role by telegram_id")
 
-	isAdmin, err := u.db.IsAdmin(ctx, telegramID)
+	if role == models.RoleGuest {
+		return true, nil
+	}
+
+	usr, err := u.db.GetUser(ctx, telegramID)
 	if err != nil {
-		log.Error("failed to check user admin in repository by telegram_id", "error", err)
+		if errors.Is(err, apperrors.ErrNotFoundUser) {
+			log.Warn("user not found")
+			return false, err
+		}
+		log.Warn("failed to get user in repository by telegram_id", "error", err)
 		return false, err
 	}
 
-	return isAdmin, err
+	return usr.HasRole(role), err
 }

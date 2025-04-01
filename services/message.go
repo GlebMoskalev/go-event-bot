@@ -6,5 +6,5 @@ import (
 )
 
 type Message interface {
-	Contact(ctx context.Context, msg tgbotapi.MessageConfig, contact *tgbotapi.Contact) tgbotapi.MessageConfig
+	Contact(ctx context.Context, msg tgbotapi.MessageConfig, contact *tgbotapi.Contact) (tgbotapi.MessageConfig, error)
 }
