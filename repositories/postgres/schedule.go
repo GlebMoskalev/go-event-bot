@@ -1,32 +1,15 @@
-package repository
+package postgres
 
 import (
 	"context"
 	"database/sql"
 	"errors"
-	"github.com/GlebMoskalev/go-event-bot/internal/models"
-	"github.com/GlebMoskalev/go-event-bot/internal/utils/apperrors"
-	"log/slog"
+	"github.com/GlebMoskalev/go-event-bot/models"
+	"github.com/GlebMoskalev/go-event-bot/pkg/apperrors"
 )
 
-type ScheduleRepository interface {
-	GetAll(ctx context.Context, offset, limit int) ([]models.Schedule, int, error)
-	Update(ctx context.Context, schedule models.Schedule) error
-	Create(ctx context.Context, schedule models.Schedule) error
-	Delete(ctx context.Context, scheduleId int) error
-}
-
-type scheduleRepo struct {
-	db  *sql.DB
-	log *slog.Logger
-}
-
-func NewScheduleRepository(db *sql.DB, log *slog.Logger) ScheduleRepository {
-	return &scheduleRepo{db: db, log: log}
-}
-
-func (r *scheduleRepo) GetAll(ctx context.Context, offset, limit int) ([]models.Schedule, int, error) {
-	log := r.log.With("layer", "repository_schedule", "operation", "GetAll")
+func (p *postgres) GetAllSchedules(ctx context.Context, offset, limit int) ([]models.Schedule, int, error) {
+	log := p.log.With("layer", "repository_schedule", "operation", "GetAll")
 	log.Info("fetching all schedule")
 
 	query := `
@@ -40,7 +23,7 @@ func (r *scheduleRepo) GetAll(ctx context.Context, offset, limit int) ([]models.
 	OFFSET $2
 `
 
-	rows, err := r.db.QueryContext(ctx, query, limit, offset)
+	rows, err := p.db.QueryContext(ctx, query, limit, offset)
 	defer func() {
 		err = rows.Close()
 		if err != nil {
@@ -80,9 +63,9 @@ func (r *scheduleRepo) GetAll(ctx context.Context, offset, limit int) ([]models.
 `
 
 	var total int
-	err = r.db.QueryRowContext(ctx, query).Scan(&total)
+	err = p.db.QueryRowContext(ctx, query).Scan(&total)
 	if err != nil {
-		r.log.Error("failed to get count schedule")
+		p.log.Error("failed to get count schedule")
 		return nil, 0, err
 	}
 
@@ -90,8 +73,8 @@ func (r *scheduleRepo) GetAll(ctx context.Context, offset, limit int) ([]models.
 	return schedules, total, nil
 }
 
-func (r *scheduleRepo) Update(ctx context.Context, schedule models.Schedule) error {
-	log := r.log.With("layer", "repository_schedule", "operation", "Update", "schedule_id", schedule.ID)
+func (p *postgres) UpdateSchedule(ctx context.Context, schedule models.Schedule) error {
+	log := p.log.With("layer", "repository_schedule", "operation", "Update", "schedule_id", schedule.ID)
 	log.Info("updating schedule")
 
 	query := `
@@ -102,7 +85,7 @@ func (r *scheduleRepo) Update(ctx context.Context, schedule models.Schedule) err
 	    date = $4
 	WHERE id = $1
 `
-	result, err := r.db.ExecContext(ctx, query, schedule.ID, schedule.Title, schedule.Description, schedule.Date)
+	result, err := p.db.ExecContext(ctx, query, schedule.ID, schedule.Title, schedule.Description, schedule.Date)
 
 	if err != nil {
 		log.Error("failed to update schedule", "error", err)
@@ -124,8 +107,8 @@ func (r *scheduleRepo) Update(ctx context.Context, schedule models.Schedule) err
 	return nil
 }
 
-func (r *scheduleRepo) Create(ctx context.Context, schedule models.Schedule) error {
-	log := r.log.With("layer", "repository_schedule", "operation", "Create", "schedule_title", schedule.Title)
+func (p *postgres) CreateSchedule(ctx context.Context, schedule models.Schedule) error {
+	log := p.log.With("layer", "repository_schedule", "operation", "Create", "schedule_title", schedule.Title)
 	log.Info("creating schedule")
 
 	query := `
@@ -134,7 +117,7 @@ func (r *scheduleRepo) Create(ctx context.Context, schedule models.Schedule) err
 	VALUES 
 		($1, $2, $3)
 `
-	result, err := r.db.ExecContext(ctx, query, schedule.Title, schedule.Description, schedule.Date)
+	result, err := p.db.ExecContext(ctx, query, schedule.Title, schedule.Description, schedule.Date)
 	if err != nil {
 		log.Error("failed to create schedule", "error", err)
 		return err
@@ -150,8 +133,8 @@ func (r *scheduleRepo) Create(ctx context.Context, schedule models.Schedule) err
 	return nil
 }
 
-func (r *scheduleRepo) Delete(ctx context.Context, scheduleId int) error {
-	log := r.log.With("layer", "repository_schedule", "operation", "Delete", "schedule_id", scheduleId)
+func (p *postgres) DeleteSchedule(ctx context.Context, scheduleId int) error {
+	log := p.log.With("layer", "repository_schedule", "operation", "Delete", "schedule_id", scheduleId)
 	log.Info("deleting schedule")
 
 	query := `
@@ -159,7 +142,7 @@ func (r *scheduleRepo) Delete(ctx context.Context, scheduleId int) error {
 	WHERE id = $1
 `
 
-	result, err := r.db.ExecContext(ctx, query, scheduleId)
+	result, err := p.db.ExecContext(ctx, query, scheduleId)
 
 	if err != nil {
 		log.Error("failed to delete schedule", "error", err)

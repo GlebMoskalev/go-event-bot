@@ -1,30 +1,27 @@
-package services
+package staff
 
 import (
 	"context"
 	"errors"
-	"github.com/GlebMoskalev/go-event-bot/internal/models"
-	"github.com/GlebMoskalev/go-event-bot/internal/repository"
-	"github.com/GlebMoskalev/go-event-bot/internal/utils/apperrors"
+	"github.com/GlebMoskalev/go-event-bot/models"
+	"github.com/GlebMoskalev/go-event-bot/pkg/apperrors"
+	"github.com/GlebMoskalev/go-event-bot/repositories"
+	"github.com/GlebMoskalev/go-event-bot/services"
 	"log/slog"
 	"regexp"
 	"strings"
 )
 
-type StaffService interface {
-	GetByPhoneNumber(ctx context.Context, phoneNumber string) (models.Staff, error)
+type staff struct {
+	db  repositories.DB
+	log *slog.Logger
 }
 
-type staffService struct {
-	repo repository.StaffRepository
-	log  *slog.Logger
+func New(db repositories.DB, log *slog.Logger) services.Staff {
+	return &staff{db: db, log: log}
 }
 
-func NewStaffService(repo repository.StaffRepository, log *slog.Logger) StaffService {
-	return &staffService{repo: repo, log: log}
-}
-
-func (s *staffService) GetByPhoneNumber(ctx context.Context, phoneNumber string) (models.Staff, error) {
+func (s *staff) GetByPhoneNumber(ctx context.Context, phoneNumber string) (models.Staff, error) {
 	log := s.log.With("layer", "service_staff", "operation", "GetByPhoneNumber", "phone_number", phoneNumber)
 	log.Info("getting staff by phone number")
 
@@ -38,7 +35,7 @@ func (s *staffService) GetByPhoneNumber(ctx context.Context, phoneNumber string)
 		phoneNumber = "+" + phoneNumber
 	}
 
-	staff, err := s.repo.GetByPhoneNumber(ctx, phoneNumber)
+	staff, err := s.db.GetStaffByPhoneNumber(ctx, phoneNumber)
 	if err != nil {
 		if errors.Is(err, apperrors.ErrNotFoundStaff) {
 			log.Warn("staff not found in repository")

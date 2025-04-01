@@ -1,14 +1,15 @@
 package main
 
 import (
-	"database/sql"
-	bot2 "github.com/GlebMoskalev/go-event-bot/internal/bot"
-	"github.com/GlebMoskalev/go-event-bot/internal/config"
-	"github.com/GlebMoskalev/go-event-bot/internal/database"
-	"github.com/GlebMoskalev/go-event-bot/internal/repository"
-	"github.com/GlebMoskalev/go-event-bot/internal/services"
+	"context"
+	"github.com/GlebMoskalev/go-event-bot/config"
+	"github.com/GlebMoskalev/go-event-bot/handlers/bot"
 	"github.com/GlebMoskalev/go-event-bot/pkg/logger"
+	"github.com/GlebMoskalev/go-event-bot/repositories"
+	"github.com/GlebMoskalev/go-event-bot/repositories/postgres"
 	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
@@ -18,45 +19,33 @@ func main() {
 	}
 	log := logger.NewLogger(cfg.AppEnv)
 
-	tgBotDb, err := database.InitDatabase(cfg.TgBotDb.Host, cfg.TgBotDb.Port, cfg.TgBotDb.User, cfg.TgBotDb.Name, cfg.TgBotDb.Password)
-	defer func(tgBotDb *sql.DB) {
-		err := tgBotDb.Close()
-		if err != nil {
-			log.Error("failed close tgBot database", "err", err.Error())
-		}
-	}(tgBotDb)
-
+	ctx := context.TODO()
+	db, err := postgres.New(ctx, cfg.Postgres, log)
 	if err != nil {
-		log.Error("failed initial tgBot database", "err", err.Error())
-		os.Exit(1)
+		panic(err)
 	}
-	log.Info("initial tgBot database")
 
-	staffDb, err := database.InitDatabase(cfg.StaffDB.Host, cfg.StaffDB.Port, cfg.StaffDB.User, cfg.StaffDB.Name, cfg.StaffDB.Password)
-	defer func(tgStaffDb *sql.DB) {
-		err := tgStaffDb.Close()
+	defer func(db repositories.DB) {
+		err := db.Close()
 		if err != nil {
-			log.Error("failed close staff database", "err", err.Error())
+			log.Error("failed to close connection database", "error", err)
 		}
-	}(staffDb)
+	}(db)
 
-	if err != nil {
-		log.Error("failed initial staff database", "err", err.Error())
-		os.Exit(1)
-	}
-	log.Info("initial staff database")
+	botInstance := bot.New(db, log)
 
-	staffRepo := repository.NewStaffRepository(staffDb, log)
-	staffService := services.NewStaffService(staffRepo, log)
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 
-	userRepo := repository.NewUserRepository(tgBotDb, log)
-	userService := services.NewUserService(userRepo, log)
+	go func() {
+		err := botInstance.Start(ctx, cfg, true)
+		if err != nil {
+			log.Error("bot failed to start", "error", err)
+			os.Exit(1)
+		}
+	}()
 
-	scheduleRepo := repository.NewScheduleRepository(tgBotDb, log)
-	scheduleService := services.NewScheduleService(scheduleRepo, log)
+	<-sigChan
 
-	botService := services.NewBotService(staffService, userService, scheduleService, log)
-
-	bot := bot2.NewBot(botService, log)
-	bot.Start(cfg)
+	log.Info("Received an interrupt, Bot stopped...")
 }
