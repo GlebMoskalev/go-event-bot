@@ -68,13 +68,14 @@ func (b *bot) Start(ctx context.Context, cfg config.App, debugMode bool) error {
 
 	updates := tgbot.GetUpdatesChan(u)
 	for update := range updates {
-		msg := update.Message
-		if msg == nil {
-			continue
-		} else if update.Message.IsCommand() {
-			go b.handler.Commands(ctx, tgbot, update)
-		} else {
-			go b.handler.Message(ctx, tgbot, update)
+		if update.CallbackQuery != nil {
+			go b.handler.Callbacks(ctx, tgbot, update)
+		} else if update.Message != nil {
+			if update.Message.IsCommand() {
+				go b.handler.Commands(ctx, tgbot, update)
+			} else {
+				go b.handler.Message(ctx, tgbot, update)
+			}
 		}
 	}
 
