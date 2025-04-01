@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/GlebMoskalev/go-event-bot/models"
-	"github.com/GlebMoskalev/go-event-bot/pkg/apperrors"
+	"github.com/GlebMoskalev/go-event-bot/utils/apperrors"
 )
 
 func (p *postgres) GetUser(ctx context.Context, telegramID int64) (models.User, error) {

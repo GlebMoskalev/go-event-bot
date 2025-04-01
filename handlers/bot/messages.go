@@ -3,6 +3,7 @@ package bot
 import (
 	"context"
 	"github.com/GlebMoskalev/go-event-bot/models"
+	"github.com/GlebMoskalev/go-event-bot/utils/commands"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
@@ -15,7 +16,7 @@ func (h *handler) Message(ctx context.Context, tgbot *tgbotapi.BotAPI, update tg
 		msg, err = h.message.Contact(ctx, msg, update.Message.Contact)
 		if err == nil {
 			h.log.Info("menuCommands")
-			menuCommands := h.command.GetMenuCommands(models.RoleStaff)
+			menuCommands := commands.GetMenuCommands(models.RoleStaff)
 			_, err := tgbot.Request(tgbotapi.NewSetMyCommandsWithScope(
 				tgbotapi.NewBotCommandScopeChat(chatID),
 				menuCommands...,
@@ -24,6 +25,7 @@ func (h *handler) Message(ctx context.Context, tgbot *tgbotapi.BotAPI, update tg
 				h.log.Error("failed to set menu commands", "error", err)
 			}
 		}
+		_ = err
 		h.SendMessage(tgbot, msg)
 		return
 	} else {

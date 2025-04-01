@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/GlebMoskalev/go-event-bot/models"
-	"github.com/GlebMoskalev/go-event-bot/pkg/apperrors"
+	"github.com/GlebMoskalev/go-event-bot/utils/apperrors"
 )
 
 func (p *postgres) GetAllSchedules(ctx context.Context, offset, limit int) ([]models.Schedule, int, error) {

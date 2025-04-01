@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/GlebMoskalev/go-event-bot/models"
-	"github.com/GlebMoskalev/go-event-bot/pkg/apperrors"
+	"github.com/GlebMoskalev/go-event-bot/utils/apperrors"
 )
 
 func (p *postgres) GetStaffByPhoneNumber(ctx context.Context, phoneNumber string) (models.Staff, error) {

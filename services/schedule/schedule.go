@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"github.com/GlebMoskalev/go-event-bot/models"
-	"github.com/GlebMoskalev/go-event-bot/pkg/apperrors"
 	"github.com/GlebMoskalev/go-event-bot/repositories"
 	"github.com/GlebMoskalev/go-event-bot/services"
+	"github.com/GlebMoskalev/go-event-bot/utils/apperrors"
 	"log/slog"
 )
 

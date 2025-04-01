@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/GlebMoskalev/go-event-bot/configs"
 	"github.com/GlebMoskalev/go-event-bot/handlers"
+	"github.com/GlebMoskalev/go-event-bot/models"
 	"github.com/GlebMoskalev/go-event-bot/repositories"
 	"github.com/GlebMoskalev/go-event-bot/services/admincommand"
 	"github.com/GlebMoskalev/go-event-bot/services/command"
@@ -11,6 +12,7 @@ import (
 	"github.com/GlebMoskalev/go-event-bot/services/schedule"
 	"github.com/GlebMoskalev/go-event-bot/services/staff"
 	"github.com/GlebMoskalev/go-event-bot/services/user"
+	"github.com/GlebMoskalev/go-event-bot/utils/commands"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log/slog"
 )
@@ -54,7 +56,7 @@ func (b *bot) Start(ctx context.Context, cfg config.App, debugMode bool) error {
 
 	_, err = tgbot.Request(tgbotapi.NewSetMyCommandsWithScope(
 		tgbotapi.NewBotCommandScopeDefault(),
-		command.DefaultCommands...,
+		commands.GetMenuCommands(models.RoleGuest)...,
 	))
 	if err != nil {
 		b.log.Error("failed to set default commands", "error", err)
