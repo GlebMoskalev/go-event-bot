@@ -10,7 +10,7 @@ type adminCmd struct {
 	db              repositories.DB
 	staffService    services.Staff
 	userService     services.User
-	scheduleService services.Schedule
+	scheduleService services.Event
 	log             *slog.Logger
 }
 
@@ -18,7 +18,7 @@ func New(
 	db repositories.DB,
 	staffSvc services.Staff,
 	userSvc services.User,
-	scheduleSvc services.Schedule,
+	scheduleSvc services.Event,
 	log *slog.Logger) services.AdminCommand {
 	return &adminCmd{
 		db:              db,

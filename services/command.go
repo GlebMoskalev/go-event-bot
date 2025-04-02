@@ -7,5 +7,5 @@ import (
 
 type Command interface {
 	Start(ctx context.Context, msg tgbotapi.MessageConfig, telegramID int64) tgbotapi.MessageConfig
-	Schedule(ctx context.Context, msg tgbotapi.MessageConfig) tgbotapi.MessageConfig
+	Event(ctx context.Context, msg tgbotapi.MessageConfig) tgbotapi.MessageConfig
 }

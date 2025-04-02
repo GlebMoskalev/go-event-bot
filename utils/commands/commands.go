@@ -7,7 +7,7 @@ import (
 
 const (
 	CmdStart       = "start"
-	CmdSchedule    = "schedule"
+	CmdEvent       = "event"
 	CmdAdminPanel  = "admin_panel"
 	CmdChangeEvent = "change_event"
 	CmdAddStaff    = "add_staff"
@@ -15,7 +15,7 @@ const (
 
 var CommandAccess = map[string]models.Role{
 	CmdStart:       models.RoleGuest,
-	CmdSchedule:    models.RoleStaff,
+	CmdEvent:       models.RoleStaff,
 	CmdAdminPanel:  models.RoleAdmin,
 	CmdChangeEvent: models.RoleAdmin,
 	CmdAddStaff:    models.RoleAdmin,
@@ -30,7 +30,7 @@ var BotCommands = map[models.Role][]tgbotapi.BotCommand{
 	},
 	models.RoleStaff: {
 		{
-			Command:     CmdSchedule,
+			Command:     CmdEvent,
 			Description: "Расписание мероприятий",
 		},
 	},

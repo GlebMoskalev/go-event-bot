@@ -15,12 +15,12 @@ func (c *callback) ScheduleAll(ctx context.Context, query *tgbotapi.CallbackQuer
 		return tgbotapi.NewCallback(query.ID, messages.Error())
 	}
 	if len(schedules) == 0 {
-		return tgbotapi.NewCallback(query.ID, messages.ScheduleEmpty())
+		return tgbotapi.NewCallback(query.ID, messages.EventEmpty())
 	}
 
 	maxPage := int(math.Ceil(float64(total) / float64(models.ItemsPerPage)))
 
-	return tgbotapi.NewEditMessageTextAndMarkup(query.Message.Chat.ID, query.Message.MessageID, messages.AllSchedules(schedules), keyboards.PaginationScheduleInline([]models.CallbackButton{
+	return tgbotapi.NewEditMessageTextAndMarkup(query.Message.Chat.ID, query.Message.MessageID, messages.AllEvents(schedules), keyboards.PaginationScheduleInline([]models.CallbackButton{
 		models.PaginationSchedule(1, maxPage, models.Prev),
 		models.PageNumber(1, maxPage),
 		models.PaginationSchedule(1, maxPage, models.Next),

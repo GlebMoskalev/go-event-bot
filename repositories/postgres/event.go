@@ -8,7 +8,7 @@ import (
 	"github.com/GlebMoskalev/go-event-bot/utils/apperrors"
 )
 
-func (p *postgres) GetAllSchedules(ctx context.Context, offset, limit int) ([]models.Schedule, int, error) {
+func (p *postgres) GetAllEvents(ctx context.Context, offset, limit int) ([]models.Event, int, error) {
 	log := p.log.With("layer", "repository_schedule", "operation", "GetAll")
 	log.Info("fetching all schedule")
 
@@ -16,9 +16,10 @@ func (p *postgres) GetAllSchedules(ctx context.Context, offset, limit int) ([]mo
 	SELECT
 	    id,
 	    title,
-	    description,
+	    speaker,
+	    auditorium,
 	    date
-	FROM schedule
+	FROM event
 	LIMIT $1
 	OFFSET $2
 `
@@ -33,23 +34,23 @@ func (p *postgres) GetAllSchedules(ctx context.Context, offset, limit int) ([]mo
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			log.Warn("schedules not found")
+			log.Warn("events not found")
 			return nil, 0, apperrors.ErrNotFoundSchedule
 		}
 		log.Error("failed to fetch all schedule")
 		return nil, 0, err
 	}
 
-	var schedules []models.Schedule
+	var events []models.Event
 
 	for rows.Next() {
-		var schedule models.Schedule
-		err = rows.Scan(&schedule.ID, &schedule.Title, &schedule.Description, &schedule.Date)
+		var event models.Event
+		err = rows.Scan(&event.ID, &event.Title, &event.Speaker, &event.Auditorium, &event.Date)
 		if err != nil {
 			log.Error("failed scan row in database", "error", err)
 			return nil, 0, err
 		}
-		schedules = append(schedules, schedule)
+		events = append(events, event)
 	}
 
 	if err = rows.Err(); err != nil {
@@ -59,7 +60,7 @@ func (p *postgres) GetAllSchedules(ctx context.Context, offset, limit int) ([]mo
 
 	query = `
 	SELECT COUNT(*)
-	FROM schedule
+	FROM event
 `
 
 	var total int
@@ -69,26 +70,27 @@ func (p *postgres) GetAllSchedules(ctx context.Context, offset, limit int) ([]mo
 		return nil, 0, err
 	}
 
-	log.Info("successfully retrieved all schedules")
-	return schedules, total, nil
+	log.Info("successfully retrieved all events")
+	return events, total, nil
 }
 
-func (p *postgres) UpdateSchedule(ctx context.Context, schedule models.Schedule) error {
-	log := p.log.With("layer", "repository_schedule", "operation", "Update", "schedule_id", schedule.ID)
-	log.Info("updating schedule")
+func (p *postgres) UpdateEvent(ctx context.Context, event models.Event) error {
+	log := p.log.With("layer", "repository_schedule", "operation", "Update", "schedule_id", event.ID)
+	log.Info("updating event")
 
 	query := `
-	UPDATE schedule
+	UPDATE event
 	SET
 	    title = $2,
-	    description = $3,
-	    date = $4
+	    speaker = $3,
+	    auditorium = $4,
+	    date = $5
 	WHERE id = $1
 `
-	result, err := p.db.ExecContext(ctx, query, schedule.ID, schedule.Title, schedule.Description, schedule.Date)
+	result, err := p.db.ExecContext(ctx, query, event.ID, event.Title, event.Speaker, event.Auditorium, event.Date)
 
 	if err != nil {
-		log.Error("failed to update schedule", "error", err)
+		log.Error("failed to update event", "error", err)
 		return err
 	}
 
@@ -99,27 +101,27 @@ func (p *postgres) UpdateSchedule(ctx context.Context, schedule models.Schedule)
 	}
 
 	if rowsAffected == 0 {
-		log.Warn("not found schedule")
+		log.Warn("not found event")
 		return apperrors.ErrNotFoundSchedule
 	}
 
-	log.Info("schedule updated successfully", "rows_affected", rowsAffected)
+	log.Info("event updated successfully", "rows_affected", rowsAffected)
 	return nil
 }
 
-func (p *postgres) CreateSchedule(ctx context.Context, schedule models.Schedule) error {
-	log := p.log.With("layer", "repository_schedule", "operation", "Create", "schedule_title", schedule.Title)
-	log.Info("creating schedule")
+func (p *postgres) CreateEvent(ctx context.Context, event models.Event) error {
+	log := p.log.With("layer", "repository_schedule", "operation", "Create", "schedule_title", event.Title)
+	log.Info("creating event")
 
 	query := `
-	INSERT INTO schedule 
-	    (title, description, date) 
+	INSERT INTO event 
+	    (title, speaker, auditorium, date) 
 	VALUES 
 		($1, $2, $3)
 `
-	result, err := p.db.ExecContext(ctx, query, schedule.Title, schedule.Description, schedule.Date)
+	result, err := p.db.ExecContext(ctx, query, event.Title, event.Speaker, event.Auditorium, event.Date)
 	if err != nil {
-		log.Error("failed to create schedule", "error", err)
+		log.Error("failed to create event", "error", err)
 		return err
 	}
 
@@ -129,20 +131,20 @@ func (p *postgres) CreateSchedule(ctx context.Context, schedule models.Schedule)
 		return err
 	}
 
-	log.Info("schedule created successfully", "rows_affected", rowsAffected)
+	log.Info("event created successfully", "rows_affected", rowsAffected)
 	return nil
 }
 
-func (p *postgres) DeleteSchedule(ctx context.Context, scheduleId int) error {
-	log := p.log.With("layer", "repository_schedule", "operation", "Delete", "schedule_id", scheduleId)
+func (p *postgres) DeleteEvent(ctx context.Context, eventID int) error {
+	log := p.log.With("layer", "repository_schedule", "operation", "Delete", "schedule_id", eventID)
 	log.Info("deleting schedule")
 
 	query := `
-	DELETE FROM schedule
+	DELETE FROM event
 	WHERE id = $1
 `
 
-	result, err := p.db.ExecContext(ctx, query, scheduleId)
+	result, err := p.db.ExecContext(ctx, query, eventID)
 
 	if err != nil {
 		log.Error("failed to delete schedule", "error", err)

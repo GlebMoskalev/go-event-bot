@@ -7,7 +7,7 @@ import (
 
 type DB interface {
 	User
-	Schedule
+	Event
 	Staff
 	Close() error
 }
@@ -18,11 +18,11 @@ type User interface {
 	ExistsUserByTelegramID(ctx context.Context, telegramID int64) (bool, error)
 }
 
-type Schedule interface {
-	GetAllSchedules(ctx context.Context, offset, limit int) ([]models.Schedule, int, error)
-	UpdateSchedule(ctx context.Context, schedule models.Schedule) error
-	CreateSchedule(ctx context.Context, schedule models.Schedule) error
-	DeleteSchedule(ctx context.Context, scheduleId int) error
+type Event interface {
+	GetAllEvents(ctx context.Context, offset, limit int) ([]models.Event, int, error)
+	UpdateEvent(ctx context.Context, event models.Event) error
+	CreateEvent(ctx context.Context, event models.Event) error
+	DeleteEvent(ctx context.Context, scheduleId int) error
 }
 
 type Staff interface {

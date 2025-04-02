@@ -9,8 +9,8 @@ import (
 	"github.com/GlebMoskalev/go-event-bot/services/admincommand"
 	"github.com/GlebMoskalev/go-event-bot/services/callback"
 	"github.com/GlebMoskalev/go-event-bot/services/command"
+	"github.com/GlebMoskalev/go-event-bot/services/event"
 	"github.com/GlebMoskalev/go-event-bot/services/message"
-	"github.com/GlebMoskalev/go-event-bot/services/schedule"
 	"github.com/GlebMoskalev/go-event-bot/services/staff"
 	"github.com/GlebMoskalev/go-event-bot/services/user"
 	"github.com/GlebMoskalev/go-event-bot/utils/commands"
@@ -27,7 +27,7 @@ func New(db repositories.DB, log *slog.Logger) handlers.Bot {
 
 	usr := user.New(db, log)
 	stf := staff.New(db, log)
-	sched := schedule.New(db, log)
+	sched := event.New(db, log)
 	cmd := command.New(db, usr, sched, log)
 	cbk := callback.New(db, usr, sched, log)
 	adminCmd := admincommand.New(db, stf, usr, sched, log)

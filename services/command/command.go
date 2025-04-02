@@ -9,14 +9,14 @@ import (
 type cmd struct {
 	db              repositories.DB
 	userService     services.User
-	scheduleService services.Schedule
+	scheduleService services.Event
 	log             *slog.Logger
 }
 
 func New(
 	db repositories.DB,
 	userSvc services.User,
-	scheduleSvc services.Schedule,
+	scheduleSvc services.Event,
 	log *slog.Logger) services.Command {
 	return &cmd{
 		db:              db,

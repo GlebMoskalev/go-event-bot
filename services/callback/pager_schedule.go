@@ -15,7 +15,7 @@ func (c *callback) PagerSchedule(ctx context.Context, query *tgbotapi.CallbackQu
 	maxPage, _ := strconv.Atoi(data[2])
 
 	var nextPage int
-	var schedules []models.Schedule
+	var schedules []models.Event
 	//var total int
 	var err error
 
@@ -38,7 +38,7 @@ func (c *callback) PagerSchedule(ctx context.Context, query *tgbotapi.CallbackQu
 		return tgbotapi.NewCallback(query.ID, "Произошла ошибка")
 	}
 
-	return tgbotapi.NewEditMessageTextAndMarkup(query.Message.Chat.ID, query.Message.MessageID, messages.AllSchedules(schedules), keyboards.PaginationScheduleInline([]models.CallbackButton{
+	return tgbotapi.NewEditMessageTextAndMarkup(query.Message.Chat.ID, query.Message.MessageID, messages.AllEvents(schedules), keyboards.PaginationScheduleInline([]models.CallbackButton{
 		models.PaginationSchedule(nextPage, maxPage, models.Prev),
 		models.PageNumber(nextPage, maxPage),
 		models.PaginationSchedule(nextPage, maxPage, models.Next),

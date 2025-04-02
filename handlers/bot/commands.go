@@ -48,8 +48,8 @@ func (h *handler) Commands(ctx context.Context, tgbot *tgbotapi.BotAPI, update t
 		if err != nil {
 			h.log.Error("failed to set menu commands", "error", err)
 		}
-	case "schedule":
-		msg = h.command.Schedule(ctx, msg)
+	case "event":
+		msg = h.command.Event(ctx, msg)
 	case "admin_panel":
 		msg = h.adminCommand.Panel(ctx, msg)
 	case "change_event":

@@ -1,4 +1,4 @@
-package schedule
+package event
 
 import (
 	"context"
@@ -10,19 +10,19 @@ import (
 	"log/slog"
 )
 
-type schedule struct {
+type event struct {
 	db  repositories.DB
 	log *slog.Logger
 }
 
-func New(db repositories.DB, log *slog.Logger) services.Schedule {
-	return &schedule{db: db, log: log}
+func New(db repositories.DB, log *slog.Logger) services.Event {
+	return &event{db: db, log: log}
 }
 
-func (s *schedule) GetAll(ctx context.Context, offset, limit int) ([]models.Schedule, int, error) {
+func (s *event) GetAll(ctx context.Context, offset, limit int) ([]models.Event, int, error) {
 	log := s.log.With("layer", "service_schedule", "operation", "GetAll")
-	log.Info("getting all schedule")
-	schedules, total, err := s.db.GetAllSchedules(ctx, offset, limit)
+	log.Info("getting all event")
+	schedules, total, err := s.db.GetAllEvents(ctx, offset, limit)
 	if err != nil {
 		if errors.Is(err, apperrors.ErrNotFoundSchedule) {
 			log.Warn("schedules not found in repository")
@@ -34,38 +34,38 @@ func (s *schedule) GetAll(ctx context.Context, offset, limit int) ([]models.Sche
 	return schedules, total, err
 }
 
-func (s *schedule) Update(ctx context.Context, schedule models.Schedule) error {
+func (s *event) Update(ctx context.Context, event models.Event) error {
 	log := s.log.With("layer", "service_schedule", "operation", "Update")
-	log.Info("updating all schedule")
-	err := s.db.UpdateSchedule(ctx, schedule)
+	log.Info("updating all event")
+	err := s.db.UpdateEvent(ctx, event)
 	if err != nil {
 		if errors.Is(err, apperrors.ErrNotFoundSchedule) {
 			log.Warn("schedules not found in repository")
 			return err
 		}
-		log.Error("failed to update schedule from repository")
+		log.Error("failed to update event from repository")
 		return err
 	}
 	return err
 }
 
-func (s *schedule) Create(ctx context.Context, schedule models.Schedule) error {
+func (s *event) Create(ctx context.Context, event models.Event) error {
 	log := s.log.With("layer", "service_schedule", "operation", "Create")
-	log.Info("creating all schedule")
-	err := s.db.CreateSchedule(ctx, schedule)
+	log.Info("creating all event")
+	err := s.db.CreateEvent(ctx, event)
 	if err != nil {
-		log.Error("failed to create schedule from repository")
+		log.Error("failed to create event from repository")
 		return err
 	}
 	return err
 }
 
-func (s *schedule) Delete(ctx context.Context, scheduleId int) error {
+func (s *event) Delete(ctx context.Context, eventId int) error {
 	log := s.log.With("layer", "service_schedule", "operation", "Delete")
-	log.Info("deleting all schedule")
-	err := s.db.DeleteSchedule(ctx, scheduleId)
+	log.Info("deleting all event")
+	err := s.db.DeleteEvent(ctx, eventId)
 	if err != nil {
-		log.Error("failed to delete schedule from repository")
+		log.Error("failed to delete event from repository")
 		return err
 	}
 	return err

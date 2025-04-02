@@ -12,6 +12,6 @@ type handler struct {
 	callback     services.Callback
 	adminCommand services.AdminCommand
 	message      services.Message
-	schedule     services.Schedule
+	schedule     services.Event
 	log          *slog.Logger
 }
