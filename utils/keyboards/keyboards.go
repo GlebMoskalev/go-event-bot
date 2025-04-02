@@ -3,7 +3,6 @@ package keyboards
 import (
 	"github.com/GlebMoskalev/go-event-bot/models"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"strconv"
 )
 
 func ContactButton() tgbotapi.ReplyKeyboardMarkup {
@@ -20,18 +19,21 @@ func RemoveKeyboard() tgbotapi.ReplyKeyboardRemove {
 	return tgbotapi.NewRemoveKeyboard(false)
 }
 
-func ScheduleInline(schedules []models.Schedule, paginationButtons []models.CallbackButton) tgbotapi.InlineKeyboardMarkup {
-	var rows [][]tgbotapi.InlineKeyboardButton
-	for _, s := range schedules {
-		row := []tgbotapi.InlineKeyboardButton{
-			tgbotapi.NewInlineKeyboardButtonData(s.Title, strconv.Itoa(s.ID)),
-		}
-		rows = append(rows, row)
-	}
+func PaginationScheduleInline(paginationButtons []models.CallbackButton) tgbotapi.InlineKeyboardMarkup {
 	var extraRow []tgbotapi.InlineKeyboardButton
 	for _, button := range paginationButtons {
 		extraRow = append(extraRow, tgbotapi.NewInlineKeyboardButtonData(button.Text, button.Data))
 	}
-	rows = append(rows, extraRow)
-	return tgbotapi.NewInlineKeyboardMarkup(rows...)
+	return tgbotapi.NewInlineKeyboardMarkup(extraRow)
+}
+
+func ScheduleInline() tgbotapi.InlineKeyboardMarkup {
+	return tgbotapi.NewInlineKeyboardMarkup(
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("Расписание всех мероприятий", "schedule:all"),
+		),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("Расписание по дням", "schedule:days"),
+		),
+	)
 }

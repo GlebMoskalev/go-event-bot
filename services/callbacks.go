@@ -7,4 +7,5 @@ import (
 
 type Callback interface {
 	PagerSchedule(ctx context.Context, query *tgbotapi.CallbackQuery, data ...string) tgbotapi.Chattable
+	ScheduleAll(ctx context.Context, query *tgbotapi.CallbackQuery) tgbotapi.Chattable
 }
