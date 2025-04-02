@@ -13,6 +13,8 @@ const (
 
 	PaginationPrefix = "pagination"
 	ScheduleContext  = "schedule"
+
+	ItemsPerPage = 9
 )
 
 type CallbackButton struct {
