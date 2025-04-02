@@ -20,7 +20,7 @@ func RemoveKeyboard() tgbotapi.ReplyKeyboardRemove {
 	return tgbotapi.NewRemoveKeyboard(false)
 }
 
-func ScheduleInline(schedules []models.Schedule, paginationButtons []models.PaginationButton) tgbotapi.InlineKeyboardMarkup {
+func ScheduleInline(schedules []models.Schedule, paginationButtons []models.CallbackButton) tgbotapi.InlineKeyboardMarkup {
 	var rows [][]tgbotapi.InlineKeyboardButton
 	for _, s := range schedules {
 		row := []tgbotapi.InlineKeyboardButton{
