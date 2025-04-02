@@ -20,7 +20,7 @@ func main() {
 	log := logger.NewLogger(cfg.AppEnv)
 
 	ctx := context.TODO()
-	db, err := postgres.New(ctx, cfg.Postgres, log)
+	db, err := postgres.New(ctx, cfg.BotPostgres, cfg.StaffPostgres, log)
 	if err != nil {
 		panic(err)
 	}

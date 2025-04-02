@@ -25,7 +25,7 @@ func (p *postgres) GetStaffByPhoneNumber(ctx context.Context, phoneNumber string
 	WHERE phone_number = $1
 `
 
-	err := p.db.QueryRowContext(ctx, query, phoneNumber).Scan(
+	err := p.dbStaff.QueryRowContext(ctx, query, phoneNumber).Scan(
 		&staff.FirstName,
 		&staff.LastName,
 		&staff.Patronymic,

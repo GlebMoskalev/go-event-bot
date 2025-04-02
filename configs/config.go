@@ -9,16 +9,24 @@ import (
 
 type (
 	App struct {
-		AppEnv   string `env:"APP_ENV,notEmpty"`
-		Bot      Bot
-		Postgres Postgres
+		AppEnv        string `env:"APP_ENV,notEmpty"`
+		Bot           Bot
+		BotPostgres   BotPostgres
+		StaffPostgres StaffPostgres
 	}
-	Postgres struct {
-		Host     string `env:"POSTGRES_HOST,notEmpty"`
-		Password string `env:"POSTGRES_PASSWORD,notEmpty"`
-		Name     string `env:"POSTGRES_DATABASE_NAME,notEmpty"`
-		Port     string `env:"POSTGRES_PORT,notEmpty"`
-		User     string `env:"POSTGRES_USER,notEmpty"`
+	BotPostgres struct {
+		Host     string `env:"POSTGRES_BOT_HOST,notEmpty"`
+		Password string `env:"POSTGRES_BOT_PASSWORD,notEmpty"`
+		Name     string `env:"POSTGRES_BOT_DATABASE_NAME,notEmpty"`
+		Port     string `env:"POSTGRES_BOT_PORT,notEmpty"`
+		User     string `env:"POSTGRES_BOT_USER,notEmpty"`
+	}
+	StaffPostgres struct {
+		Host     string `env:"POSTGRES_STAFF_HOST,notEmpty"`
+		Password string `env:"POSTGRES_STAFF_PASSWORD,notEmpty"`
+		Name     string `env:"POSTGRES_STAFF_DATABASE_NAME,notEmpty"`
+		Port     string `env:"POSTGRES_STAFF_PORT,notEmpty"`
+		User     string `env:"POSTGRES_STAFF_USER,notEmpty"`
 	}
 
 	Bot struct {

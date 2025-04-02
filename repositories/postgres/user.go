@@ -22,7 +22,7 @@ func (p *postgres) GetUser(ctx context.Context, telegramID int64) (models.User, 
 	WHERE telegram_id = $1
 `
 	var user models.User
-	err := p.db.QueryRowContext(ctx, query, telegramID).Scan(
+	err := p.dbBot.QueryRowContext(ctx, query, telegramID).Scan(
 		&user.FirstName,
 		&user.LastName,
 		&user.Patronymic,
@@ -54,7 +54,7 @@ func (p *postgres) CreateUser(ctx context.Context, user models.User) error {
 		($1, $2, $3, $4, $5)
 `
 
-	_, err := p.db.ExecContext(ctx, query, user.TelegramID, user.FirstName, user.LastName, user.Patronymic, user.Role)
+	_, err := p.dbBot.ExecContext(ctx, query, user.TelegramID, user.FirstName, user.LastName, user.Patronymic, user.Role)
 	if err != nil {
 		log.Error("failed to create user in database", "error", err)
 		return err
@@ -75,7 +75,7 @@ func (p *postgres) ExistsUserByTelegramID(ctx context.Context, telegramID int64)
 	)
 `
 	var exists bool
-	err := p.db.QueryRowContext(ctx, query, telegramID).Scan(&exists)
+	err := p.dbBot.QueryRowContext(ctx, query, telegramID).Scan(&exists)
 
 	if err != nil {
 		log.Error("failed to verify user existence using telegram_id", "error", err)

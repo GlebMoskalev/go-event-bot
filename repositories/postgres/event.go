@@ -29,7 +29,7 @@ func (p *postgres) GetAllEvents(ctx context.Context, offset, limit int) ([]model
 	OFFSET $2
 `
 
-	rows, err := p.db.QueryContext(ctx, query, limit, offset)
+	rows, err := p.dbBot.QueryContext(ctx, query, limit, offset)
 	defer func() {
 		err = rows.Close()
 		if err != nil {
@@ -70,7 +70,7 @@ func (p *postgres) GetAllEvents(ctx context.Context, offset, limit int) ([]model
 `
 
 	var total int
-	err = p.db.QueryRowContext(ctx, query).Scan(&total)
+	err = p.dbBot.QueryRowContext(ctx, query).Scan(&total)
 	if err != nil {
 		p.log.Error("failed to get count schedule")
 		return nil, 0, err
@@ -94,7 +94,7 @@ func (p *postgres) UpdateEvent(ctx context.Context, event models.Event) error {
 	    date = $6
 	WHERE id = $1
 `
-	result, err := p.db.ExecContext(ctx, query, event.ID, event.Title, event.Speaker, event.Auditorium, event.Status, event.Date)
+	result, err := p.dbBot.ExecContext(ctx, query, event.ID, event.Title, event.Speaker, event.Auditorium, event.Status, event.Date)
 
 	if err != nil {
 		log.Error("failed to update event", "error", err)
@@ -126,7 +126,7 @@ func (p *postgres) CreateEvent(ctx context.Context, event models.Event) error {
 	VALUES 
 		($1, $2, $3, $4)
 `
-	result, err := p.db.ExecContext(ctx, query, event.Title, event.Speaker, event.Auditorium, event.Status, event.Date)
+	result, err := p.dbBot.ExecContext(ctx, query, event.Title, event.Speaker, event.Auditorium, event.Status, event.Date)
 	if err != nil {
 		log.Error("failed to create event", "error", err)
 		return err
@@ -151,7 +151,7 @@ func (p *postgres) DeleteEvent(ctx context.Context, eventID int) error {
 	WHERE id = $1
 `
 
-	result, err := p.db.ExecContext(ctx, query, eventID)
+	result, err := p.dbBot.ExecContext(ctx, query, eventID)
 
 	if err != nil {
 		log.Error("failed to delete schedule", "error", err)
