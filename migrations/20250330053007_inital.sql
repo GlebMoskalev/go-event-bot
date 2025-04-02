@@ -1,6 +1,7 @@
 -- +goose Up
 -- +goose StatementBegin
 CREATE TYPE role_type AS ENUM ('guest', 'staff','admin');
+CREATE TYPE event_status AS ENUM('planned', 'ongoing', 'completed');
 SELECT 'up SQL query';
 CREATE TABLE users (
     telegram_id BIGINT PRIMARY KEY,
@@ -14,7 +15,8 @@ CREATE TABLE event(
     title VARCHAR(50),
     speaker text,
     auditorium text,
-    date timestamptz
+    date timestamptz,
+    status event_status DEFAULT 'planned'
 );
 CREATE TABLE user_event(
     telegram_id BIGINT REFERENCES users(telegram_id),
@@ -33,9 +35,10 @@ CREATE TABLE staffs (
 -- +goose Down
 -- +goose StatementBegin
 SELECT 'down SQL query';
-DROP TABLE user_event;
-DROP TABLE users;
-DROP TABLE event;
-DROP TABLE staffs;
-DROP TYPE role_type;
+DROP TABLE IF EXISTS user_event;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS event;  -- сначала удаляем таблицу, которая зависит от event_status
+DROP TABLE IF EXISTS staffs;
+DROP TYPE IF EXISTS role_type;
+DROP TYPE IF EXISTS event_status;
 -- +goose StatementEnd

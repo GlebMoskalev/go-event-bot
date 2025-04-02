@@ -16,8 +16,15 @@ func EventTitle() string {
 func AllEvents(events []models.Event) string {
 	res := "Мероприятия:\n\n"
 	for _, schedule := range events {
+		var emojiStatus string
+		if schedule.Status == models.StatusPlanned {
+			emojiStatus = "🔜"
+		} else if schedule.Status == models.StatusOngoing {
+			emojiStatus = "🟢"
+		}
 		res += fmt.Sprintf(
-			"🌐%s\n🎙️%s\n📍%s\n🗓️%s\n\n",
+			"%s%s\n🎙️%s\n📍%s\n🗓️%s\n\n",
+			emojiStatus,
 			schedule.Title,
 			schedule.Speaker,
 			schedule.Auditorium,

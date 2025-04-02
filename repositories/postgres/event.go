@@ -18,8 +18,13 @@ func (p *postgres) GetAllEvents(ctx context.Context, offset, limit int) ([]model
 	    title,
 	    speaker,
 	    auditorium,
+	    status,
 	    date
 	FROM event
+	WHERE status != 'completed'
+	ORDER BY 
+	    CASE WHEN status = 'ongoing' THEN 0 ELSE 1 END,
+	    date
 	LIMIT $1
 	OFFSET $2
 `
@@ -45,7 +50,7 @@ func (p *postgres) GetAllEvents(ctx context.Context, offset, limit int) ([]model
 
 	for rows.Next() {
 		var event models.Event
-		err = rows.Scan(&event.ID, &event.Title, &event.Speaker, &event.Auditorium, &event.Date)
+		err = rows.Scan(&event.ID, &event.Title, &event.Speaker, &event.Auditorium, &event.Status, &event.Date)
 		if err != nil {
 			log.Error("failed scan row in database", "error", err)
 			return nil, 0, err
@@ -84,10 +89,11 @@ func (p *postgres) UpdateEvent(ctx context.Context, event models.Event) error {
 	    title = $2,
 	    speaker = $3,
 	    auditorium = $4,
-	    date = $5
+	    status = $5,
+	    date = $6
 	WHERE id = $1
 `
-	result, err := p.db.ExecContext(ctx, query, event.ID, event.Title, event.Speaker, event.Auditorium, event.Date)
+	result, err := p.db.ExecContext(ctx, query, event.ID, event.Title, event.Speaker, event.Auditorium, event.Status, event.Date)
 
 	if err != nil {
 		log.Error("failed to update event", "error", err)
@@ -115,11 +121,11 @@ func (p *postgres) CreateEvent(ctx context.Context, event models.Event) error {
 
 	query := `
 	INSERT INTO event 
-	    (title, speaker, auditorium, date) 
+	    (title, speaker, auditorium, status, date) 
 	VALUES 
-		($1, $2, $3)
+		($1, $2, $3, $4)
 `
-	result, err := p.db.ExecContext(ctx, query, event.Title, event.Speaker, event.Auditorium, event.Date)
+	result, err := p.db.ExecContext(ctx, query, event.Title, event.Speaker, event.Auditorium, event.Status, event.Date)
 	if err != nil {
 		log.Error("failed to create event", "error", err)
 		return err
