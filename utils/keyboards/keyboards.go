@@ -24,7 +24,8 @@ func PaginationScheduleInline(paginationButtons []models.CallbackButton) tgbotap
 	for _, button := range paginationButtons {
 		extraRow = append(extraRow, tgbotapi.NewInlineKeyboardButtonData(button.Text, button.Data))
 	}
-	return tgbotapi.NewInlineKeyboardMarkup(extraRow)
+	rowBack := tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData("Вернутся обратно", "back:event"))
+	return tgbotapi.NewInlineKeyboardMarkup(extraRow, rowBack)
 }
 
 func ScheduleInline() tgbotapi.InlineKeyboardMarkup {

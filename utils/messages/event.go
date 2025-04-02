@@ -14,7 +14,7 @@ func EventTitle() string {
 }
 
 func AllEvents(events []models.Event) string {
-	res := "Мероприятия:\n\n"
+	res := "Все мероприятия:\n\n"
 	for _, schedule := range events {
 		var emojiStatus string
 		if schedule.Status == models.StatusPlanned {
