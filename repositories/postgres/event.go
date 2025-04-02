@@ -66,6 +66,7 @@ func (p *postgres) GetAllEvents(ctx context.Context, offset, limit int) ([]model
 	query = `
 	SELECT COUNT(*)
 	FROM event
+	WHERE status != 'completed'
 `
 
 	var total int
