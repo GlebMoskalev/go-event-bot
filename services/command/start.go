@@ -2,12 +2,13 @@ package command
 
 import (
 	"context"
+	"github.com/GlebMoskalev/go-event-bot/utils/apperrors"
 	"github.com/GlebMoskalev/go-event-bot/utils/keyboards"
 	"github.com/GlebMoskalev/go-event-bot/utils/messages"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-func (c *cmd) Start(ctx context.Context, msg tgbotapi.MessageConfig, telegramID int64) tgbotapi.MessageConfig {
+func (c *cmd) Start(ctx context.Context, msg tgbotapi.MessageConfig, telegramID int64) (tgbotapi.MessageConfig, error) {
 	chatID := msg.ChatID
 	log := c.log.With("layer", "service_command", "operation", "Start", "chat_id", chatID)
 	log.Info("start")
@@ -16,7 +17,7 @@ func (c *cmd) Start(ctx context.Context, msg tgbotapi.MessageConfig, telegramID 
 	if err != nil {
 		c.log.Error("failed to check user")
 		msg.Text = messages.Error()
-		return msg
+		return msg, err
 	}
 
 	if existUser {
@@ -24,13 +25,13 @@ func (c *cmd) Start(ctx context.Context, msg tgbotapi.MessageConfig, telegramID 
 		if err != nil {
 			log.Error("failed to get user")
 			msg.Text = messages.Error()
-			return msg
+			return msg, err
 		}
 		msg.Text = messages.Welcome(user.FirstName, user.Patronymic)
-		return msg
+		return msg, apperrors.ErrUserExists
 	}
 
 	msg.Text = messages.RequestContact()
 	msg.ReplyMarkup = keyboards.ContactButton()
-	return msg
+	return msg, nil
 }

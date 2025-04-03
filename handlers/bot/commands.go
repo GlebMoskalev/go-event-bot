@@ -39,14 +39,17 @@ func (h *handler) Commands(ctx context.Context, tgbot *tgbotapi.BotAPI, update t
 
 	switch cmd {
 	case "start":
-		msg = h.command.Start(ctx, msg, telegramID)
-		menuCommands := commands.GetMenuCommands(models.RoleGuest)
-		_, err := tgbot.Request(tgbotapi.NewSetMyCommandsWithScope(
-			tgbotapi.NewBotCommandScopeChat(chatID),
-			menuCommands...,
-		))
-		if err != nil {
-			h.log.Error("failed to set menu commands", "error", err)
+		msg, err = h.command.Start(ctx, msg, telegramID)
+		h.log.Info("start", "err", err)
+		if err == nil {
+			menuCommands := commands.GetMenuCommands(models.RoleGuest)
+			_, err := tgbot.Request(tgbotapi.NewSetMyCommandsWithScope(
+				tgbotapi.NewBotCommandScopeChat(chatID),
+				menuCommands...,
+			))
+			if err != nil {
+				h.log.Error("failed to set menu commands", "error", err)
+			}
 		}
 	case "event":
 		msg = h.command.Event(ctx, msg)
