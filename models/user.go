@@ -13,6 +13,7 @@ type User struct {
 	FirstName  string
 	LastName   string
 	Patronymic string
+	ChatID     int64
 	Role       Role
 }
 

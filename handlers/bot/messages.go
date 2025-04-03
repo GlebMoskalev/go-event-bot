@@ -15,7 +15,6 @@ func (h *handler) Message(ctx context.Context, tgbot *tgbotapi.BotAPI, update tg
 		var err error
 		msg, err = h.message.Contact(ctx, msg, update.Message.Contact)
 		if err == nil {
-			h.log.Info("menuCommands")
 			menuCommands := commands.GetMenuCommands(models.RoleStaff)
 			_, err := tgbot.Request(tgbotapi.NewSetMyCommandsWithScope(
 				tgbotapi.NewBotCommandScopeChat(chatID),

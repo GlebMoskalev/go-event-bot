@@ -17,7 +17,8 @@ func (p *postgres) GetUser(ctx context.Context, telegramID int64) (models.User, 
 		firstname,
 		lastname,
 		patronymic,
-		role
+		role,
+		chat_id
 	FROM users
 	WHERE telegram_id = $1
 `
@@ -27,6 +28,7 @@ func (p *postgres) GetUser(ctx context.Context, telegramID int64) (models.User, 
 		&user.LastName,
 		&user.Patronymic,
 		&user.Role,
+		&user.ChatID,
 	)
 
 	if err != nil {
@@ -49,12 +51,13 @@ func (p *postgres) CreateUser(ctx context.Context, user models.User) error {
 
 	query := `
 	INSERT INTO users 
-		(telegram_id, firstname, lastname, patronymic, role) 
+		(telegram_id, firstname, lastname, patronymic, role, chat_id) 
 	VALUES 
-		($1, $2, $3, $4, $5)
+		($1, $2, $3, $4, $5, $6)
 `
 
-	_, err := p.dbBot.ExecContext(ctx, query, user.TelegramID, user.FirstName, user.LastName, user.Patronymic, user.Role)
+	_, err := p.dbBot.ExecContext(ctx, query, user.TelegramID, user.FirstName, user.LastName, user.Patronymic,
+		user.Role, user.ChatID)
 	if err != nil {
 		log.Error("failed to create user in database", "error", err)
 		return err

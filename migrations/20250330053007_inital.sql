@@ -8,6 +8,7 @@ CREATE TABLE users (
     firstname VARCHAR(30),
     lastname  varchar(30),
     patronymic varchar(30),
+    chat_id BIGINT,
     role role_type
 );
 CREATE TABLE event(

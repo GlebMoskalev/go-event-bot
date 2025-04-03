@@ -54,6 +54,7 @@ func (m *msg) Contact(ctx context.Context, msg tgbotapi.MessageConfig, contact *
 		LastName:   staff.LastName,
 		Patronymic: staff.Patronymic,
 		Role:       models.RoleStaff,
+		ChatID:     msg.ChatID,
 	})
 
 	if err != nil {
