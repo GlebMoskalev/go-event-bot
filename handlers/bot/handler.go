@@ -13,5 +13,6 @@ type handler struct {
 	adminCommand services.AdminCommand
 	message      services.Message
 	schedule     services.Event
+	state        services.State
 	log          *slog.Logger
 }

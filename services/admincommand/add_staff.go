@@ -6,6 +6,11 @@ import (
 )
 
 func (a *adminCmd) AddStaff(ctx context.Context, msg tgbotapi.MessageConfig) tgbotapi.MessageConfig {
-	msg.Text = "Добавления сотрудника"
+	err := a.state.StartAddStaff(ctx, msg.ChatID)
+	if err != nil {
+		msg.Text = "Произошла ошибка"
+	} else {
+		msg.Text = "Введите ФИО сотрудника в формате: Иван Иванович Иванов"
+	}
 	return msg
 }

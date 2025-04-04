@@ -31,6 +31,11 @@ CREATE TABLE staffs (
     email varchar(50),
     phone_number varchar(20)
 );
+CREATE TABLE states(
+    chat_id BIGINT PRIMARY KEY,
+    data JSONB,
+    state TEXT
+);
 -- +goose StatementEnd
 
 -- +goose Down
@@ -38,8 +43,9 @@ CREATE TABLE staffs (
 SELECT 'down SQL query';
 DROP TABLE IF EXISTS user_event;
 DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS event;  -- сначала удаляем таблицу, которая зависит от event_status
+DROP TABLE IF EXISTS event;
 DROP TABLE IF EXISTS staffs;
+DROP TABLE IF EXISTS states;
 DROP TYPE IF EXISTS role_type;
 DROP TYPE IF EXISTS event_status;
 -- +goose StatementEnd

@@ -12,6 +12,7 @@ import (
 	"github.com/GlebMoskalev/go-event-bot/services/event"
 	"github.com/GlebMoskalev/go-event-bot/services/message"
 	"github.com/GlebMoskalev/go-event-bot/services/staff"
+	"github.com/GlebMoskalev/go-event-bot/services/state"
 	"github.com/GlebMoskalev/go-event-bot/services/user"
 	"github.com/GlebMoskalev/go-event-bot/utils/commands"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -30,7 +31,8 @@ func New(db repositories.DB, log *slog.Logger) handlers.Bot {
 	sched := event.New(db, log)
 	cmd := command.New(db, usr, sched, log)
 	cbk := callback.New(db, usr, sched, log)
-	adminCmd := admincommand.New(db, stf, usr, sched, log)
+	st := state.New(db, log)
+	adminCmd := admincommand.New(db, stf, usr, sched, st, log)
 	msg := message.New(db, stf, usr, cmd, log)
 	handler := &handler{
 		user:         usr,
@@ -40,6 +42,7 @@ func New(db repositories.DB, log *slog.Logger) handlers.Bot {
 		adminCommand: adminCmd,
 		message:      msg,
 		schedule:     sched,
+		state:        st,
 		log:          log,
 	}
 
@@ -71,13 +74,21 @@ func (b *bot) Start(ctx context.Context, cfg config.App, debugMode bool) error {
 
 	updates := tgbot.GetUpdatesChan(u)
 	for update := range updates {
+		st, err := b.handler.state.Get(ctx, update.Message.Chat.ID)
+		_ = err
+		//if err != nil {
+		//	continue
+		//}
+		if st != "" {
+			go b.handler.Message(ctx, tgbot, update, st)
+		}
 		if update.CallbackQuery != nil {
 			go b.handler.Callbacks(ctx, tgbot, update)
 		} else if update.Message != nil {
 			if update.Message.IsCommand() {
 				go b.handler.Commands(ctx, tgbot, update)
 			} else {
-				go b.handler.Message(ctx, tgbot, update)
+				go b.handler.Message(ctx, tgbot, update, "")
 			}
 		}
 	}

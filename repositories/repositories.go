@@ -9,6 +9,7 @@ type DB interface {
 	User
 	Event
 	Staff
+	State
 	Close() error
 }
 
@@ -27,4 +28,11 @@ type Event interface {
 
 type Staff interface {
 	GetStaffByPhoneNumber(ctx context.Context, phoneNumber string) (models.Staff, error)
+}
+
+type State interface {
+	GetState(ctx context.Context, chatID int64) (models.State, error)
+	GetStateAndData(ctx context.Context, chatID int64) (models.State, []byte, error)
+	SetState(ctx context.Context, chatID int64, state models.State, dataJSON []byte) error
+	RemoveState(ctx context.Context, chatID int64) error
 }

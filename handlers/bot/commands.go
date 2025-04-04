@@ -42,7 +42,7 @@ func (h *handler) Commands(ctx context.Context, tgbot *tgbotapi.BotAPI, update t
 		msg, err = h.command.Start(ctx, msg, telegramID)
 		h.log.Info("start", "err", err)
 		if err == nil {
-			menuCommands := commands.GetMenuCommands(models.RoleGuest)
+			menuCommands := commands.GetMenuCommands(models.RoleStaff)
 			_, err := tgbot.Request(tgbotapi.NewSetMyCommandsWithScope(
 				tgbotapi.NewBotCommandScopeChat(chatID),
 				menuCommands...,

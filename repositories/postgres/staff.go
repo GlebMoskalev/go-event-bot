@@ -19,7 +19,6 @@ func (p *postgres) GetStaffByPhoneNumber(ctx context.Context, phoneNumber string
 		firstname, 
 		lastname, 
 		patronymic, 
-		email,
 		phone_number
 	FROM staffs
 	WHERE phone_number = $1
@@ -29,7 +28,6 @@ func (p *postgres) GetStaffByPhoneNumber(ctx context.Context, phoneNumber string
 		&staff.FirstName,
 		&staff.LastName,
 		&staff.Patronymic,
-		&staff.Email,
 		&staff.PhoneNumber,
 	)
 

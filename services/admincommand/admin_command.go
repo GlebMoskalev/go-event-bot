@@ -11,6 +11,7 @@ type adminCmd struct {
 	staffService    services.Staff
 	userService     services.User
 	scheduleService services.Event
+	state           services.State
 	log             *slog.Logger
 }
 
@@ -19,12 +20,14 @@ func New(
 	staffSvc services.Staff,
 	userSvc services.User,
 	scheduleSvc services.Event,
+	state services.State,
 	log *slog.Logger) services.AdminCommand {
 	return &adminCmd{
 		db:              db,
 		staffService:    staffSvc,
 		userService:     userSvc,
 		scheduleService: scheduleSvc,
+		state:           state,
 		log:             log,
 	}
 }

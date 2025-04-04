@@ -7,9 +7,31 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-func (h *handler) Message(ctx context.Context, tgbot *tgbotapi.BotAPI, update tgbotapi.Update) {
+func (h *handler) Message(ctx context.Context, tgbot *tgbotapi.BotAPI, update tgbotapi.Update, state models.State) {
 	chatID := update.Message.Chat.ID
 	msg := tgbotapi.NewMessage(chatID, "")
+	h.log.Error("mess", "state", state)
+	if state != "" {
+		switch state {
+		case models.StateStaffRegisterFullName:
+			err := h.state.RegisterStaffFullName(ctx, chatID, update.Message.Text)
+			h.log.Error("er", "erorr", err)
+			msg.Text = "Введите номер телефона"
+			tgbot.Send(msg)
+			return
+		case models.StateStaffRegisterPhoneNumber:
+			err := h.state.RegisterStaffNumberPhone(ctx, chatID, update.Message.Text)
+			h.log.Error("fss", "error", err)
+			msg.Text = "Вы точно уверены"
+			tgbot.Send(msg)
+			return
+		case models.StateStaffRegisterConfirm:
+			h.state.ConfirmAddStaff(ctx, chatID)
+			msg.Text = "сотрудник добавлен"
+			tgbot.Send(msg)
+			return
+		}
+	}
 
 	if update.Message.Contact != nil {
 		var err error
