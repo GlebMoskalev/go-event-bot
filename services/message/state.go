@@ -75,7 +75,7 @@ func (m *msg) stateStaffRegisterPhoneNumber(ctx context.Context, msg tgbotapi.Me
 	)
 	log.Info("processing phone number registration")
 
-	re := regexp.MustCompile(`^\+?[1-9]\d{1,14}$`)
+	re := regexp.MustCompile(`^[1-9]\d{1,14}$`)
 	if !re.MatchString(msg.Text) {
 		log.Warn("invalid phone number format")
 		msg.Text = "Неправильный формат номера телефона. Введите в формате 79532597271"

@@ -30,10 +30,7 @@ func (s *staff) GetByPhoneNumber(ctx context.Context, phoneNumber string) (model
 		log.Warn(apperrors.ErrInvalidPhoneNumber.Error())
 		return models.Staff{}, apperrors.ErrInvalidPhoneNumber
 	}
-
-	if !strings.HasPrefix(phoneNumber, "+") {
-		phoneNumber = "+" + phoneNumber
-	}
+	phoneNumber = strings.TrimPrefix(phoneNumber, "+")
 
 	staff, err := s.db.GetStaffByPhoneNumber(ctx, phoneNumber)
 	if err != nil {

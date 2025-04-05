@@ -75,9 +75,6 @@ func (s *state) RegisterStaffNumberPhone(ctx context.Context, chatID int64, phon
 	}
 
 	phoneNumber = strings.TrimSpace(phoneNumber)
-	if !strings.HasPrefix(phoneNumber, "+") {
-		phoneNumber = "+" + phoneNumber
-	}
 	staff.PhoneNumber = phoneNumber
 
 	updateData, err := json.Marshal(staff)
