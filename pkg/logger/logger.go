@@ -27,3 +27,11 @@ func NewLogger(appEnv string) *slog.Logger {
 	}
 	return log
 }
+
+func SetupLogger(baseLogger *slog.Logger, layer, operation string, extraFields ...any) *slog.Logger {
+	log := baseLogger.With("layer", layer, "operation", operation)
+	if len(extraFields) > 0 {
+		log = log.With(extraFields...)
+	}
+	return log
+}

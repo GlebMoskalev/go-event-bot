@@ -5,6 +5,7 @@ import (
 	"github.com/GlebMoskalev/go-event-bot/configs"
 	"github.com/GlebMoskalev/go-event-bot/handlers"
 	"github.com/GlebMoskalev/go-event-bot/models"
+	"github.com/GlebMoskalev/go-event-bot/pkg/logger"
 	"github.com/GlebMoskalev/go-event-bot/repositories"
 	"github.com/GlebMoskalev/go-event-bot/services/admincommand"
 	"github.com/GlebMoskalev/go-event-bot/services/callback"
@@ -50,7 +51,8 @@ func New(db repositories.DB, log *slog.Logger) handlers.Bot {
 }
 
 func (b *bot) Start(ctx context.Context, cfg config.App, debugMode bool) error {
-	b.log.Info("bot starting...")
+	log := logger.SetupLogger(b.log, "bot", "Start")
+	log.Info("bot starting", "debug_mode", debugMode)
 
 	tgbot, err := tgbotapi.NewBotAPI(cfg.Bot.Token)
 	if err != nil {
@@ -59,13 +61,14 @@ func (b *bot) Start(ctx context.Context, cfg config.App, debugMode bool) error {
 	}
 
 	tgbot.Debug = debugMode
+	log.Info("bot api initialized successfully")
 
 	_, err = tgbot.Request(tgbotapi.NewSetMyCommandsWithScope(
 		tgbotapi.NewBotCommandScopeDefault(),
 		commands.GetMenuCommands(models.RoleGuest)...,
 	))
 	if err != nil {
-		b.log.Error("failed to set default commands", "error", err)
+		log.Error("failed to set default commands", "error", err)
 		return err
 	}
 
@@ -78,9 +81,6 @@ func (b *bot) Start(ctx context.Context, cfg config.App, debugMode bool) error {
 		if update.Message != nil && update.Message.Chat != nil {
 			st, _ = b.handler.state.Get(ctx, update.Message.Chat.ID)
 		}
-		//if err != nil {
-		//	continue
-		//}
 		if st != "" {
 			go b.handler.Message(ctx, tgbot, update, st)
 		} else if update.CallbackQuery != nil {

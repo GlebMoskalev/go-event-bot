@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/GlebMoskalev/go-event-bot/models"
+	"github.com/GlebMoskalev/go-event-bot/pkg/logger"
 	"github.com/GlebMoskalev/go-event-bot/utils/apperrors"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"regexp"
@@ -13,11 +14,10 @@ import (
 )
 
 func (m *msg) State(ctx context.Context, msg tgbotapi.MessageConfig, state models.State) tgbotapi.MessageConfig {
-	log := m.log.With(
-		"layer", "service_message",
-		"operation", "State",
-		"chat_id", msg.ChatID,
-		"state", state,
+	log := logger.SetupLogger(m.log,
+		"service_message",
+		"State", "chat_id",
+		msg.ChatID, "state", state,
 	)
 	log.Info("processing message based on state")
 
@@ -29,15 +29,15 @@ func (m *msg) State(ctx context.Context, msg tgbotapi.MessageConfig, state model
 	case models.StateStaffRegisterConfirm:
 		return m.stateStaffRegisterConfirm(ctx, msg)
 	default:
+		log.Warn("unknown state encountered")
 		msg.Text = "Произошла ошибка"
 		return msg
 	}
 }
 
 func (m *msg) stateStaffRegisterFullName(ctx context.Context, msg tgbotapi.MessageConfig) tgbotapi.MessageConfig {
-	log := m.log.With(
-		"layer", "service_message",
-		"operation", "stateStaffRegisterFullName",
+	log := logger.SetupLogger(m.log,
+		"service_message", "StateStaffRegisterFullName",
 		"chat_id", msg.ChatID,
 		"text", msg.Text,
 	)
@@ -50,12 +50,6 @@ func (m *msg) stateStaffRegisterFullName(ctx context.Context, msg tgbotapi.Messa
 		return msg
 	}
 
-	log.Info("registering staff full name",
-		"last_name", fullNameSplit[0],
-		"first_name", fullNameSplit[1],
-		"patronymic", fullNameSplit[2],
-	)
-
 	err := m.stateService.RegisterStaffFullName(ctx, msg.ChatID, fullNameSplit[0], fullNameSplit[1], fullNameSplit[2])
 	if err != nil {
 		log.Error("failed to register staff full name", "error", err)
@@ -63,13 +57,14 @@ func (m *msg) stateStaffRegisterFullName(ctx context.Context, msg tgbotapi.Messa
 		return msg
 	}
 	msg.Text = "Введите номер телефона в формате 79137777777"
+
+	log.Info("staff full name registered successfully")
 	return msg
 }
 
 func (m *msg) stateStaffRegisterPhoneNumber(ctx context.Context, msg tgbotapi.MessageConfig) tgbotapi.MessageConfig {
-	log := m.log.With(
-		"layer", "service_message",
-		"operation", "stateStaffRegisterPhoneNumber",
+	log := logger.SetupLogger(m.log,
+		"service_message", "StateStaffRegisterPhoneNumber",
 		"chat_id", msg.ChatID,
 		"phone_number", msg.Text,
 	)
@@ -88,11 +83,11 @@ func (m *msg) stateStaffRegisterPhoneNumber(ctx context.Context, msg tgbotapi.Me
 		if err != nil {
 			log.Error("failed to remove state", "error", err)
 		}
+		log.Warn("staff with this phone number already exists")
 		msg.Text = "Сотрудник с таким номером телефона существует"
 		return msg
 	}
 
-	log.Info("registering staff phone number")
 	err = m.stateService.RegisterStaffNumberPhone(ctx, msg.ChatID, msg.Text)
 	if err != nil {
 		log.Error("failed to register staff phone number", "error", err)
@@ -115,30 +110,25 @@ func (m *msg) stateStaffRegisterPhoneNumber(ctx context.Context, msg tgbotapi.Me
 		return msg
 	}
 
-	log.Info("phone number registered successfully, requesting confirmation",
-		"staff", staff.LastName+" "+staff.FirstName+" "+staff.Patronymic,
-		"phone", staff.PhoneNumber,
-	)
 	msg.Text = fmt.Sprintf(
 		"Подтвердите, что вы хотите добавить сотрудника:\n%s %s %s\n%s\n\n Введите 'да', если подтверждаете",
 		staff.LastName, staff.FirstName, staff.Patronymic,
 		staff.PhoneNumber,
 	)
 
+	log.Info("phone number registered successfully")
 	return msg
 }
 
 func (m *msg) stateStaffRegisterConfirm(ctx context.Context, msg tgbotapi.MessageConfig) tgbotapi.MessageConfig {
-	log := m.log.With(
-		"layer", "service_message",
-		"operation", "stateStaffRegisterConfirm",
+	log := logger.SetupLogger(m.log,
+		"service_message", "StateStaffRegisterConfirm",
 		"chat_id", msg.ChatID,
 		"response", msg.Text,
 	)
 	log.Info("processing staff registration confirmation")
 
 	if msg.Text == "да" {
-		log.Info("confirmed staff creation, retrieving staff data")
 		_, data, err := m.stateService.GetWithData(ctx, msg.ChatID)
 		if err != nil {
 			log.Error("failed to retrieve staff data", "error", err)

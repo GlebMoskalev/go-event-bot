@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/GlebMoskalev/go-event-bot/models"
+	"github.com/GlebMoskalev/go-event-bot/pkg/logger"
 	"github.com/GlebMoskalev/go-event-bot/utils/apperrors"
 	"github.com/GlebMoskalev/go-event-bot/utils/keyboards"
 	messages2 "github.com/GlebMoskalev/go-event-bot/utils/messages"
@@ -11,16 +12,22 @@ import (
 )
 
 func (m *msg) Contact(ctx context.Context, msg tgbotapi.MessageConfig, contact *tgbotapi.Contact) (tgbotapi.MessageConfig, error) {
-	log := m.log.With("layer", "service_message", "operation", "Contact", "chat_id", msg.ChatID)
+	log := logger.SetupLogger(m.log,
+		"service_message", "Contact",
+		"chat_id", msg.ChatID,
+		"telegram_id", contact.UserID,
+	)
+	log.Info("processing contact message")
 
 	exists, err := m.userService.ExistsUserByTelegramID(ctx, contact.UserID)
 	if err != nil {
-		log.Error("failed to check user in service", "error", err)
+		log.Error("failed to check user existence", "error", err)
 		msg.Text = messages2.Error()
 		return msg, err
 	}
 
 	if exists {
+		log.Info("user already exists")
 		msg.Text = messages2.ContactExists()
 		return msg, nil
 	}
@@ -36,13 +43,13 @@ func (m *msg) Contact(ctx context.Context, msg tgbotapi.MessageConfig, contact *
 		}
 
 		if errors.Is(err, apperrors.ErrNotFoundStaff) {
-			log.Warn("user not found in staff", "phone_number", phoneNumber)
+			log.Warn("staff not found", "phone_number", phoneNumber)
 			msg.ReplyMarkup = keyboards.RemoveKeyboard()
 			msg.Text = messages2.StaffNotFound()
 			return msg, err
 		}
 
-		log.Error("failed to get staff in service", "error", err)
+		log.Error("failed to get staff", "error", err)
 
 		msg.Text = messages2.Error()
 		return msg, err
@@ -58,6 +65,7 @@ func (m *msg) Contact(ctx context.Context, msg tgbotapi.MessageConfig, contact *
 	})
 
 	if err != nil {
+		log.Error("failed to create user", "error", err)
 		msg.Text = messages2.Error()
 		return msg, err
 	}
@@ -66,5 +74,7 @@ func (m *msg) Contact(ctx context.Context, msg tgbotapi.MessageConfig, contact *
 		staff.FirstName,
 		staff.Patronymic)
 	msg.ReplyMarkup = keyboards.RemoveKeyboard()
+
+	log.Info("contact processed successfully")
 	return msg, nil
 }

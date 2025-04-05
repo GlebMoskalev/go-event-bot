@@ -5,11 +5,12 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/GlebMoskalev/go-event-bot/models"
+	"github.com/GlebMoskalev/go-event-bot/pkg/logger"
 	"github.com/GlebMoskalev/go-event-bot/utils/apperrors"
 )
 
 func (p *postgres) GetUser(ctx context.Context, telegramID int64) (models.User, error) {
-	log := p.log.With("layer", "repository_user", "operation", "Get", "telegram_id", telegramID)
+	log := logger.SetupLogger(p.log, "repository_user", "GetUser", "telegram_id", telegramID)
 	log.Info("fetching user data")
 
 	query := `
@@ -37,16 +38,19 @@ func (p *postgres) GetUser(ctx context.Context, telegramID int64) (models.User, 
 			return models.User{}, apperrors.ErrNotFoundStaff
 		}
 
-		log.Error("failed to fetch user from database", "error", err)
+		log.Error("failed to fetch user", "error", err)
 	}
 
-	log.Info("user retrieved successfully")
 	user.TelegramID = telegramID
-	return user, err
+	log.Info("user retrieved successfully")
+	return user, nil
 }
 
 func (p *postgres) CreateUser(ctx context.Context, user models.User) error {
-	log := p.log.With("layer", "repository_user", "operation", "Create", "telegram_id", user.TelegramID)
+	log := logger.SetupLogger(p.log,
+		"repository_user", "CreateUser",
+		"telegram_id", user.TelegramID,
+	)
 	log.Info("creating new user")
 
 	query := `
@@ -56,20 +60,29 @@ func (p *postgres) CreateUser(ctx context.Context, user models.User) error {
 		($1, $2, $3, $4, $5, $6)
 `
 
-	_, err := p.dbBot.ExecContext(ctx, query, user.TelegramID, user.FirstName, user.LastName, user.Patronymic,
+	result, err := p.dbBot.ExecContext(ctx, query, user.TelegramID, user.FirstName, user.LastName, user.Patronymic,
 		user.Role, user.ChatID)
 	if err != nil {
-		log.Error("failed to create user in database", "error", err)
+		log.Error("failed to create user", "error", err)
 		return err
 	}
 
-	log.Info("user created successfully")
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		log.Error("failed to get rows affected", "error", err)
+		return err
+	}
+
+	log.Info("user created successfully", "rows_affected", rowsAffected)
 	return nil
 }
 
 func (p *postgres) ExistsUserByTelegramID(ctx context.Context, telegramID int64) (bool, error) {
-	log := p.log.With("layer", "repository_user", "operation", "ExistsUserByTelegramID", "telegram_id", telegramID)
-	log.Info("checking user existence by telegram_id")
+	log := logger.SetupLogger(p.log,
+		"repository_user", "ExistsUserByTelegramID",
+		"telegram_id", telegramID,
+	)
+	log.Info("checking user existence")
 
 	query := `
 	SELECT 
@@ -81,10 +94,10 @@ func (p *postgres) ExistsUserByTelegramID(ctx context.Context, telegramID int64)
 	err := p.dbBot.QueryRowContext(ctx, query, telegramID).Scan(&exists)
 
 	if err != nil {
-		log.Error("failed to verify user existence using telegram_id", "error", err)
+		log.Error("failed to check user existence", "error", err)
 		return false, err
 	}
 
-	log.Info("user existence by telegram_id checked successfully")
-	return exists, err
+	log.Info("user existence checked successfully", "exists", exists)
+	return exists, nil
 }

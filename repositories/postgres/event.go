@@ -5,12 +5,13 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/GlebMoskalev/go-event-bot/models"
+	"github.com/GlebMoskalev/go-event-bot/pkg/logger"
 	"github.com/GlebMoskalev/go-event-bot/utils/apperrors"
 )
 
 func (p *postgres) GetAllEvents(ctx context.Context, offset, limit int) ([]models.Event, int, error) {
-	log := p.log.With("layer", "repository_schedule", "operation", "GetAll")
-	log.Info("fetching all schedule")
+	log := logger.SetupLogger(p.log, "repository_event", "GetAllEvents")
+	log.Info("fetching all events")
 
 	query := `
 	SELECT
@@ -33,16 +34,16 @@ func (p *postgres) GetAllEvents(ctx context.Context, offset, limit int) ([]model
 	defer func() {
 		err = rows.Close()
 		if err != nil {
-			log.Error("failed to close rows")
+			log.Error("failed to close rows", "error", err)
 		}
 	}()
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			log.Warn("events not found")
-			return nil, 0, apperrors.ErrNotFoundSchedule
+			log.Warn("no events found")
+			return nil, 0, apperrors.ErrNotFoundEvent
 		}
-		log.Error("failed to fetch all schedule")
+		log.Error("failed to fetch events", "error", err)
 		return nil, 0, err
 	}
 
@@ -52,14 +53,14 @@ func (p *postgres) GetAllEvents(ctx context.Context, offset, limit int) ([]model
 		var event models.Event
 		err = rows.Scan(&event.ID, &event.Title, &event.Speaker, &event.Auditorium, &event.Status, &event.Date)
 		if err != nil {
-			log.Error("failed scan row in database", "error", err)
+			log.Error("failed to scan row", "error", err)
 			return nil, 0, err
 		}
 		events = append(events, event)
 	}
 
 	if err = rows.Err(); err != nil {
-		log.Info("failed rows error", "error", err)
+		log.Info("row processing error", "error", err)
 		return nil, 0, err
 	}
 
@@ -72,16 +73,16 @@ func (p *postgres) GetAllEvents(ctx context.Context, offset, limit int) ([]model
 	var total int
 	err = p.dbBot.QueryRowContext(ctx, query).Scan(&total)
 	if err != nil {
-		p.log.Error("failed to get count schedule")
+		p.log.Error("failed to get events count", "error", err)
 		return nil, 0, err
 	}
 
-	log.Info("successfully retrieved all events")
+	log.Info("successfully retrieved events", "count", len(events), "total", total)
 	return events, total, nil
 }
 
 func (p *postgres) UpdateEvent(ctx context.Context, event models.Event) error {
-	log := p.log.With("layer", "repository_schedule", "operation", "Update", "schedule_id", event.ID)
+	log := logger.SetupLogger(p.log, "repository_event", "Update", "event_id", event.ID)
 	log.Info("updating event")
 
 	query := `
@@ -108,8 +109,8 @@ func (p *postgres) UpdateEvent(ctx context.Context, event models.Event) error {
 	}
 
 	if rowsAffected == 0 {
-		log.Warn("not found event")
-		return apperrors.ErrNotFoundSchedule
+		log.Warn("event not found")
+		return apperrors.ErrNotFoundEvent
 	}
 
 	log.Info("event updated successfully", "rows_affected", rowsAffected)
@@ -117,7 +118,7 @@ func (p *postgres) UpdateEvent(ctx context.Context, event models.Event) error {
 }
 
 func (p *postgres) CreateEvent(ctx context.Context, event models.Event) error {
-	log := p.log.With("layer", "repository_schedule", "operation", "Create", "schedule_title", event.Title)
+	log := logger.SetupLogger(p.log, "repository_event", "Create", "title", event.Title)
 	log.Info("creating event")
 
 	query := `
@@ -143,8 +144,8 @@ func (p *postgres) CreateEvent(ctx context.Context, event models.Event) error {
 }
 
 func (p *postgres) DeleteEvent(ctx context.Context, eventID int) error {
-	log := p.log.With("layer", "repository_schedule", "operation", "Delete", "schedule_id", eventID)
-	log.Info("deleting schedule")
+	log := logger.SetupLogger(p.log, "repository_event", "Delete", "event_id", eventID)
+	log.Info("deleting event")
 
 	query := `
 	DELETE FROM event
@@ -154,7 +155,7 @@ func (p *postgres) DeleteEvent(ctx context.Context, eventID int) error {
 	result, err := p.dbBot.ExecContext(ctx, query, eventID)
 
 	if err != nil {
-		log.Error("failed to delete schedule", "error", err)
+		log.Error("failed to delete event", "error", err)
 		return err
 	}
 
@@ -165,10 +166,10 @@ func (p *postgres) DeleteEvent(ctx context.Context, eventID int) error {
 	}
 
 	if rowsAffected == 0 {
-		log.Warn("not found schedule")
-		return apperrors.ErrNotFoundSchedule
+		log.Warn("event not found")
+		return apperrors.ErrNotFoundEvent
 	}
 
-	log.Info("schedule deleted successfully", "rows_affected", rowsAffected)
+	log.Info("event deleted successfully", "rows_affected", rowsAffected)
 	return nil
 }

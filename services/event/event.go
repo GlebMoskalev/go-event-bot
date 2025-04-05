@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/GlebMoskalev/go-event-bot/models"
+	"github.com/GlebMoskalev/go-event-bot/pkg/logger"
 	"github.com/GlebMoskalev/go-event-bot/repositories"
 	"github.com/GlebMoskalev/go-event-bot/services"
 	"github.com/GlebMoskalev/go-event-bot/utils/apperrors"
@@ -20,53 +21,82 @@ func New(db repositories.DB, log *slog.Logger) services.Event {
 }
 
 func (s *event) GetAll(ctx context.Context, offset, limit int) ([]models.Event, int, error) {
-	log := s.log.With("layer", "service_schedule", "operation", "GetAll")
-	log.Info("getting all event")
+	log := logger.SetupLogger(s.log,
+		"service_event", "GetAll",
+		"offset", offset,
+		"limit", limit,
+	)
+	log.Info("getting all events")
+
 	schedules, total, err := s.db.GetAllEvents(ctx, offset, limit)
 	if err != nil {
-		if errors.Is(err, apperrors.ErrNotFoundSchedule) {
-			log.Warn("schedules not found in repository")
+		if errors.Is(err, apperrors.ErrNotFoundEvent) {
+			log.Warn("events not found")
 			return nil, 0, err
 		}
-		log.Error("failed to get schedules from repository")
+		log.Error("failed to get events")
 		return nil, 0, err
 	}
+
+	log.Info("events retrieved successfully")
 	return schedules, total, err
 }
 
 func (s *event) Update(ctx context.Context, event models.Event) error {
-	log := s.log.With("layer", "service_schedule", "operation", "Update")
-	log.Info("updating all event")
+	log := logger.SetupLogger(s.log,
+		"service_event", "Update",
+		"event_id", event.ID,
+	)
+	log.Info("updating all events")
+
 	err := s.db.UpdateEvent(ctx, event)
 	if err != nil {
-		if errors.Is(err, apperrors.ErrNotFoundSchedule) {
-			log.Warn("schedules not found in repository")
+		if errors.Is(err, apperrors.ErrNotFoundEvent) {
+			log.Warn("event not found")
 			return err
 		}
-		log.Error("failed to update event from repository")
+		log.Error("failed to update event")
 		return err
 	}
+
+	log.Info("event updated successfully")
 	return err
 }
 
 func (s *event) Create(ctx context.Context, event models.Event) error {
-	log := s.log.With("layer", "service_schedule", "operation", "Create")
-	log.Info("creating all event")
+	log := logger.SetupLogger(s.log,
+		"service_event", "Create",
+		"title", event.Title,
+	)
+	log.Info("creating all events")
+
 	err := s.db.CreateEvent(ctx, event)
 	if err != nil {
-		log.Error("failed to create event from repository")
+		log.Error("failed to create event")
 		return err
 	}
+
+	log.Info("event created successfully")
 	return err
 }
 
 func (s *event) Delete(ctx context.Context, eventId int) error {
-	log := s.log.With("layer", "service_schedule", "operation", "Delete")
-	log.Info("deleting all event")
+	log := logger.SetupLogger(s.log,
+		"service_event", "Delete",
+		"event_id", eventId,
+	)
+	log.Info("deleting event")
+
 	err := s.db.DeleteEvent(ctx, eventId)
 	if err != nil {
-		log.Error("failed to delete event from repository")
+		if errors.Is(err, apperrors.ErrNotFoundEvent) {
+			log.Warn("event not found")
+			return err
+		}
+		log.Error("failed to delete event", "error", err)
 		return err
 	}
+
+	log.Info("event deleted successfully")
 	return err
 }

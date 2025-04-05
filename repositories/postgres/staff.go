@@ -5,11 +5,15 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/GlebMoskalev/go-event-bot/models"
+	"github.com/GlebMoskalev/go-event-bot/pkg/logger"
 	"github.com/GlebMoskalev/go-event-bot/utils/apperrors"
 )
 
 func (p *postgres) GetStaffByPhoneNumber(ctx context.Context, phoneNumber string) (models.Staff, error) {
-	log := p.log.With("layer", "repository_staff", "operation", "GetByPhoneNumber", "phone_number", phoneNumber)
+	log := logger.SetupLogger(p.log,
+		"repository_staff", "GetByPhoneNumber",
+		"phone_number", phoneNumber,
+	)
 	log.Info("fetching staff data")
 
 	var staff models.Staff
@@ -36,7 +40,7 @@ func (p *postgres) GetStaffByPhoneNumber(ctx context.Context, phoneNumber string
 			log.Warn("staff not found")
 			return models.Staff{}, apperrors.ErrNotFoundStaff
 		}
-		log.Error("failed to fetch staff from database", "error", err)
+		log.Error("failed to fetch staff from", "error", err)
 		return models.Staff{}, err
 	}
 
@@ -45,11 +49,13 @@ func (p *postgres) GetStaffByPhoneNumber(ctx context.Context, phoneNumber string
 }
 
 func (p *postgres) CreateStaff(ctx context.Context, staff models.Staff) error {
-	log := p.log.With("layer", "repository_staff", "operation", "CreateStaff",
+	log := logger.SetupLogger(p.log,
+		"repository_staff", "CreateStaff",
 		"first_name", staff.FirstName,
 		"last_name", staff.LastName,
-		"phone_number", staff.PhoneNumber)
-	log.Info("creating new staff record")
+		"phone_number", staff.PhoneNumber,
+	)
+	log.Info("creating new staff")
 
 	query := `
 	INSERT INTO staffs 
@@ -57,21 +63,26 @@ func (p *postgres) CreateStaff(ctx context.Context, staff models.Staff) error {
 	VALUES 
 	    ($1, $2, $3, $4)
 `
-	_, err := p.dbStaff.ExecContext(ctx, query, staff.FirstName, staff.LastName, staff.Patronymic, staff.PhoneNumber)
+	result, err := p.dbStaff.ExecContext(ctx, query, staff.FirstName, staff.LastName, staff.Patronymic, staff.PhoneNumber)
 	if err != nil {
-		log.Error("failed to create staff record", "error", err)
+		log.Error("failed to create staff", "error", err)
+		return err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		log.Error("failed to get rows affected", "error", err)
 		return err
 	}
 
-	log.Info("staff record created successfully")
+	log.Info("staff created successfully", "rows_affected", rowsAffected)
 	return nil
 }
 
 func (p *postgres) UpdateStaff(ctx context.Context, staff models.Staff) error {
-	log := p.log.With("layer", "repository_staff", "operation", "UpdateStaff",
-		"first_name", staff.FirstName,
-		"last_name", staff.LastName,
-		"phone_number", staff.PhoneNumber)
+	log := logger.SetupLogger(p.log,
+		"repository_staff", "UpdateStaff",
+		"phone_number", staff.PhoneNumber,
+	)
 	log.Info("updating staff record")
 
 	query := `
@@ -84,7 +95,7 @@ func (p *postgres) UpdateStaff(ctx context.Context, staff models.Staff) error {
 
 	result, err := p.dbStaff.ExecContext(ctx, query, staff.FirstName, staff.LastName, staff.Patronymic, staff.PhoneNumber)
 	if err != nil {
-		log.Error("failed to update staff record", "error", err)
+		log.Error("failed to update staff", "error", err)
 		return err
 	}
 
@@ -95,17 +106,17 @@ func (p *postgres) UpdateStaff(ctx context.Context, staff models.Staff) error {
 	}
 
 	if rowsAffected == 0 {
-		log.Warn("staff not found for update")
+		log.Warn("staff not found")
 		return apperrors.ErrNotFoundStaff
 	}
 
-	log.Info("staff record updated successfully")
+	log.Info("staff updated successfully", "rows_affected", rowsAffected)
 	return nil
 }
 
 func (p *postgres) DeleteStaff(ctx context.Context, phoneNumber string) error {
-	log := p.log.With("layer", "repository_staff", "operation", "DeleteStaff", "phone_number", phoneNumber)
-	log.Info("deleting staff record")
+	log := logger.SetupLogger(p.log, "repository_staff", "DeleteStaff", "phone_number", phoneNumber)
+	log.Info("deleting staff")
 
 	query := `
 	DELETE FROM staffs
@@ -114,7 +125,7 @@ func (p *postgres) DeleteStaff(ctx context.Context, phoneNumber string) error {
 
 	result, err := p.dbStaff.ExecContext(ctx, query, phoneNumber)
 	if err != nil {
-		log.Error("failed to delete staff record", "error", err)
+		log.Error("failed to delete staff", "error", err)
 		return err
 	}
 
@@ -125,10 +136,10 @@ func (p *postgres) DeleteStaff(ctx context.Context, phoneNumber string) error {
 	}
 
 	if rowsAffected == 0 {
-		log.Warn("staff not found for deletion")
+		log.Warn("staff not found")
 		return apperrors.ErrNotFoundStaff
 	}
 
-	log.Info("staff record deleted successfully")
+	log.Info("staff record deleted successfully", "rows_affected", rowsAffected)
 	return nil
 }

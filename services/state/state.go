@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/GlebMoskalev/go-event-bot/models"
+	"github.com/GlebMoskalev/go-event-bot/pkg/logger"
 	"github.com/GlebMoskalev/go-event-bot/repositories"
 	"github.com/GlebMoskalev/go-event-bot/services"
 	"github.com/GlebMoskalev/go-event-bot/utils/apperrors"
@@ -22,7 +23,7 @@ func New(db repositories.DB, log *slog.Logger) services.State {
 }
 
 func (s *state) StartAddStaff(ctx context.Context, chatID int64) error {
-	log := s.log.With("layer", "service_state", "operation", "StartAddStaff", "chat_id", chatID)
+	log := logger.SetupLogger(s.log, "service_state", "StartAddStaff", "chat_id", chatID)
 	log.Info("starting staff registration process")
 
 	err := s.db.SetState(ctx, chatID, models.StateStaffRegisterFullName, []byte("{}"))
@@ -36,7 +37,10 @@ func (s *state) StartAddStaff(ctx context.Context, chatID int64) error {
 }
 
 func (s *state) RegisterStaffFullName(ctx context.Context, chatID int64, firstName, lastName, patronymic string) error {
-	log := s.log.With("layer", "service_state", "operation", "RegisterStaffFullName", "chat_id", chatID)
+	log := logger.SetupLogger(s.log,
+		"service_state", "RegisterStaffFullName",
+		"chat_id", chatID,
+	)
 	log.Info("registering staff full name")
 
 	staff := models.Staff{
@@ -54,12 +58,16 @@ func (s *state) RegisterStaffFullName(ctx context.Context, chatID int64, firstNa
 		log.Error("failed to set state to phone number registration", "error", err)
 	}
 
-	log.Error("failed to set state to phone number registration", "error", err)
+	log.Error("staff full name registered successfully")
 	return nil
 }
 
 func (s *state) RegisterStaffNumberPhone(ctx context.Context, chatID int64, phoneNumber string) error {
-	log := s.log.With("layer", "service_state", "operation", "RegisterStaffNumberPhone", "chat_id", chatID, "phone", phoneNumber)
+	log := logger.SetupLogger(s.log,
+		"service_state", "RegisterStaffNumberPhone",
+		"chat_id", chatID,
+		"phone", phoneNumber,
+	)
 	log.Info("registering staff phone number")
 
 	_, data, err := s.db.GetStateAndData(ctx, chatID)
@@ -80,19 +88,21 @@ func (s *state) RegisterStaffNumberPhone(ctx context.Context, chatID int64, phon
 	updateData, err := json.Marshal(staff)
 	if err != nil {
 		log.Error("failed to marshal updated staff data", "error", err)
+		return err
 	}
 
 	err = s.db.SetState(ctx, chatID, models.StateStaffRegisterConfirm, updateData)
 	if err != nil {
 		log.Error("failed to set state to confirmation", "error", err)
+		return err
 	}
 
 	log.Info("staff phone number registered successfully")
-	return err
+	return nil
 }
 
 func (s *state) ConfirmAddStaff(ctx context.Context, chatID int64) error {
-	log := s.log.With("layer", "service_state", "operation", "ConfirmAddStaff", "chat_id", chatID)
+	log := logger.SetupLogger(s.log, "service_state", "ConfirmAddStaff", "chat_id", chatID)
 	log.Info("confirming staff registration")
 
 	err := s.db.RemoveState(ctx, chatID)
@@ -106,13 +116,13 @@ func (s *state) ConfirmAddStaff(ctx context.Context, chatID int64) error {
 }
 
 func (s *state) Get(ctx context.Context, chatID int64) (models.State, error) {
-	log := s.log.With("layer", "service_state", "operation", "Get", "chat_id", chatID)
+	log := logger.SetupLogger(s.log, "service_state", "Get", "chat_id", chatID)
 	log.Info("getting current state")
 
 	state, err := s.db.GetState(ctx, chatID)
 	if err != nil {
 		if errors.Is(err, apperrors.ErrNotFoundState) {
-			log.Debug("no state found for chat")
+			log.Warn("no state found")
 			return "", err
 		}
 		log.Error("failed to get state", "error", err)
@@ -124,26 +134,26 @@ func (s *state) Get(ctx context.Context, chatID int64) (models.State, error) {
 }
 
 func (s *state) GetWithData(ctx context.Context, chatID int64) (models.State, []byte, error) {
-	log := s.log.With("layer", "service_state", "operation", "GetWithData", "chat_id", chatID)
+	log := logger.SetupLogger(s.log, "service_state", "GetWithData", "chat_id", chatID)
 	log.Info("getting current state with data")
 
 	state, data, err := s.db.GetStateAndData(ctx, chatID)
 	if err != nil {
 		if errors.Is(err, apperrors.ErrNotFoundState) {
-			log.Debug("no state found for chat")
+			log.Warn("no state found for chat")
 			return "", nil, err
 		}
 		log.Error("failed to get state with data", "error", err)
 		return "", nil, err
 	}
 
-	log.Info("state with data retrieved successfully", "state", state, "data_size", len(data))
+	log.Info("state with data retrieved successfully", "state", state)
 	return state, data, nil
 }
 
 func (s *state) RemoveState(ctx context.Context, chatID int64) error {
-	log := s.log.With("layer", "service_state", "operation", "DeleteState", "chat_id", chatID)
-	log.Info("deleting state for chat")
+	log := logger.SetupLogger(s.log, "service_state", "RemoveState", "chat_id", chatID)
+	log.Info("removing state")
 
 	err := s.db.RemoveState(ctx, chatID)
 	if err != nil {
@@ -151,6 +161,6 @@ func (s *state) RemoveState(ctx context.Context, chatID int64) error {
 		return err
 	}
 
-	log.Info("state deleted successfully")
+	log.Info("state remove successfully")
 	return nil
 }

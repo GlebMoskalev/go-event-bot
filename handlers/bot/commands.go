@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/GlebMoskalev/go-event-bot/models"
+	"github.com/GlebMoskalev/go-event-bot/pkg/logger"
 	"github.com/GlebMoskalev/go-event-bot/utils/apperrors"
 	"github.com/GlebMoskalev/go-event-bot/utils/commands"
 	"github.com/GlebMoskalev/go-event-bot/utils/messages"
@@ -11,6 +12,13 @@ import (
 )
 
 func (h *handler) Commands(ctx context.Context, tgbot *tgbotapi.BotAPI, update tgbotapi.Update) {
+	log := logger.SetupLogger(h.log,
+		"bot_handler", "Commands",
+		"chat_id", update.Message.Chat.ID,
+		"telegram_id", update.Message.From.ID,
+		"command", update.Message.Command(),
+	)
+
 	telegramID := update.Message.From.ID
 	chatID := update.Message.Chat.ID
 	cmd := update.Message.Command()
@@ -19,6 +27,7 @@ func (h *handler) Commands(ctx context.Context, tgbot *tgbotapi.BotAPI, update t
 
 	requiredRole, exists := commands.CommandAccess[cmd]
 	if !exists {
+		log.Warn("unknown command received")
 		msg.Text = messages.UnknownCommand()
 		h.SendMessage(tgbot, msg)
 		return
@@ -32,6 +41,7 @@ func (h *handler) Commands(ctx context.Context, tgbot *tgbotapi.BotAPI, update t
 	}
 
 	if !hasRole {
+		log.Info("access denied for user")
 		msg.Text = messages.AccessDenied()
 		h.SendMessage(tgbot, msg)
 		return
@@ -39,6 +49,7 @@ func (h *handler) Commands(ctx context.Context, tgbot *tgbotapi.BotAPI, update t
 
 	switch cmd {
 	case "start":
+		log.Info("handling start command")
 		msg, err = h.command.Start(ctx, msg, telegramID)
 		h.log.Info("start", "err", err)
 		if err == nil {
@@ -52,12 +63,16 @@ func (h *handler) Commands(ctx context.Context, tgbot *tgbotapi.BotAPI, update t
 			}
 		}
 	case "event":
+		log.Info("handling event command")
 		msg = h.command.Event(ctx, msg)
 	case "admin_panel":
+		log.Info("handling admin panel command")
 		msg = h.adminCommand.Panel(ctx, msg)
 	case "change_event":
+		log.Info("handling change event command")
 		msg = h.adminCommand.ChangeEvent(ctx, msg)
 	case "add_staff":
+		log.Info("handling add staff command")
 		msg = h.adminCommand.AddStaff(ctx, msg)
 	}
 	h.SendMessage(tgbot, msg)
