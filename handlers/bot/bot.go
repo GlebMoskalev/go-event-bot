@@ -33,7 +33,7 @@ func New(db repositories.DB, log *slog.Logger) handlers.Bot {
 	cbk := callback.New(db, usr, sched, log)
 	st := state.New(db, log)
 	adminCmd := admincommand.New(db, stf, usr, sched, st, log)
-	msg := message.New(db, stf, usr, cmd, log)
+	msg := message.New(db, stf, usr, cmd, st, log)
 	handler := &handler{
 		user:         usr,
 		staff:        stf,
@@ -74,15 +74,16 @@ func (b *bot) Start(ctx context.Context, cfg config.App, debugMode bool) error {
 
 	updates := tgbot.GetUpdatesChan(u)
 	for update := range updates {
-		st, err := b.handler.state.Get(ctx, update.Message.Chat.ID)
-		_ = err
+		var st models.State
+		if update.Message != nil && update.Message.Chat != nil {
+			st, _ = b.handler.state.Get(ctx, update.Message.Chat.ID)
+		}
 		//if err != nil {
 		//	continue
 		//}
 		if st != "" {
 			go b.handler.Message(ctx, tgbot, update, st)
-		}
-		if update.CallbackQuery != nil {
+		} else if update.CallbackQuery != nil {
 			go b.handler.Callbacks(ctx, tgbot, update)
 		} else if update.Message != nil {
 			if update.Message.IsCommand() {

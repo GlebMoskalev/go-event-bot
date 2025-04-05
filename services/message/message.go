@@ -11,6 +11,7 @@ type msg struct {
 	commandService services.Command
 	staffService   services.Staff
 	userService    services.User
+	stateService   services.State
 	log            *slog.Logger
 }
 
@@ -19,12 +20,14 @@ func New(
 	staffSvc services.Staff,
 	userSvc services.User,
 	commandService services.Command,
+	stateService services.State,
 	log *slog.Logger) services.Message {
 	return &msg{
 		db:             db,
 		staffService:   staffSvc,
 		userService:    userSvc,
 		commandService: commandService,
+		stateService:   stateService,
 		log:            log,
 	}
 }

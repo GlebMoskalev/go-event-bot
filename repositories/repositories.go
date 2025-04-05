@@ -28,6 +28,9 @@ type Event interface {
 
 type Staff interface {
 	GetStaffByPhoneNumber(ctx context.Context, phoneNumber string) (models.Staff, error)
+	CreateStaff(ctx context.Context, staff models.Staff) error
+	UpdateStaff(ctx context.Context, staff models.Staff) error
+	DeleteStaff(ctx context.Context, phoneNumber string) error
 }
 
 type State interface {

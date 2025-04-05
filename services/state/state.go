@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/GlebMoskalev/go-event-bot/models"
 	"github.com/GlebMoskalev/go-event-bot/repositories"
 	"github.com/GlebMoskalev/go-event-bot/services"
+	"github.com/GlebMoskalev/go-event-bot/utils/apperrors"
 	"log/slog"
 	"strings"
 )
@@ -22,52 +22,138 @@ func New(db repositories.DB, log *slog.Logger) services.State {
 }
 
 func (s *state) StartAddStaff(ctx context.Context, chatID int64) error {
+	log := s.log.With("layer", "service_state", "operation", "StartAddStaff", "chat_id", chatID)
+	log.Info("starting staff registration process")
+
 	err := s.db.SetState(ctx, chatID, models.StateStaffRegisterFullName, []byte("{}"))
+	if err != nil {
+		log.Error("failed to set initial state", "error", err)
+		return err
+	}
+
+	log.Info("staff registration process started successfully")
 	return err
 }
 
-func (s *state) RegisterStaffFullName(ctx context.Context, chatID int64, fullName string) error {
-	fullNameSplit := strings.Split(fullName, " ")
-	fmt.Println(fullNameSplit)
-	if len(fullNameSplit) < 3 {
-		return errors.New("name is incomplete")
-	}
+func (s *state) RegisterStaffFullName(ctx context.Context, chatID int64, firstName, lastName, patronymic string) error {
+	log := s.log.With("layer", "service_state", "operation", "RegisterStaffFullName", "chat_id", chatID)
+	log.Info("registering staff full name")
 
 	staff := models.Staff{
-		FirstName:  fullNameSplit[0],
-		LastName:   fullNameSplit[1],
-		Patronymic: fullNameSplit[2],
+		FirstName:  firstName,
+		LastName:   lastName,
+		Patronymic: patronymic,
 	}
 	data, err := json.Marshal(staff)
 	if err != nil {
-		s.log.Error("register full name", "error", err)
+		log.Error("failed to marshal staff data", "error", err)
 		return err
 	}
 	err = s.db.SetState(ctx, chatID, models.StateStaffRegisterPhoneNumber, data)
-	s.log.Error("register full name", "error", err)
-	return err
+	if err != nil {
+		log.Error("failed to set state to phone number registration", "error", err)
+	}
+
+	log.Error("failed to set state to phone number registration", "error", err)
+	return nil
 }
 
-func (s *state) RegisterStaffNumberPhone(ctx context.Context, chatID int64, numberPhone string) error {
+func (s *state) RegisterStaffNumberPhone(ctx context.Context, chatID int64, phoneNumber string) error {
+	log := s.log.With("layer", "service_state", "operation", "RegisterStaffNumberPhone", "chat_id", chatID, "phone", phoneNumber)
+	log.Info("registering staff phone number")
+
 	_, data, err := s.db.GetStateAndData(ctx, chatID)
 	if err != nil {
+		log.Error("failed to get current state and data", "error", err)
 		return err
 	}
 	var staff models.Staff
 	err = json.Unmarshal(data, &staff)
 	if err != nil {
+		log.Error("failed to unmarshal staff data", "error", err)
 		return err
 	}
-	err = s.db.SetState(ctx, chatID, models.StateStaffRegisterConfirm, data)
+
+	phoneNumber = strings.TrimSpace(phoneNumber)
+	if !strings.HasPrefix(phoneNumber, "+") {
+		phoneNumber = "+" + phoneNumber
+	}
+	staff.PhoneNumber = phoneNumber
+
+	updateData, err := json.Marshal(staff)
+	if err != nil {
+		log.Error("failed to marshal updated staff data", "error", err)
+	}
+
+	err = s.db.SetState(ctx, chatID, models.StateStaffRegisterConfirm, updateData)
+	if err != nil {
+		log.Error("failed to set state to confirmation", "error", err)
+	}
+
+	log.Info("staff phone number registered successfully")
 	return err
 }
 
 func (s *state) ConfirmAddStaff(ctx context.Context, chatID int64) error {
+	log := s.log.With("layer", "service_state", "operation", "ConfirmAddStaff", "chat_id", chatID)
+	log.Info("confirming staff registration")
+
 	err := s.db.RemoveState(ctx, chatID)
-	s.log.Error("ef", "error", err)
-	return err
+	if err != nil {
+		log.Error("failed to remove state after confirmation", "error", err)
+		return err
+	}
+
+	log.Info("staff registration completed successfully")
+	return nil
 }
 
 func (s *state) Get(ctx context.Context, chatID int64) (models.State, error) {
-	return s.db.GetState(ctx, chatID)
+	log := s.log.With("layer", "service_state", "operation", "Get", "chat_id", chatID)
+	log.Info("getting current state")
+
+	state, err := s.db.GetState(ctx, chatID)
+	if err != nil {
+		if errors.Is(err, apperrors.ErrNotFoundState) {
+			log.Debug("no state found for chat")
+			return "", err
+		}
+		log.Error("failed to get state", "error", err)
+		return "", err
+	}
+
+	log.Info("state retrieved successfully", "state", state)
+	return state, nil
+}
+
+func (s *state) GetWithData(ctx context.Context, chatID int64) (models.State, []byte, error) {
+	log := s.log.With("layer", "service_state", "operation", "GetWithData", "chat_id", chatID)
+	log.Info("getting current state with data")
+
+	state, data, err := s.db.GetStateAndData(ctx, chatID)
+	if err != nil {
+		if errors.Is(err, apperrors.ErrNotFoundState) {
+			log.Debug("no state found for chat")
+			return "", nil, err
+		}
+		log.Error("failed to get state with data", "error", err)
+		return "", nil, err
+	}
+
+	log.Info("state with data retrieved successfully", "state", state, "data_size", len(data))
+	return state, data, nil
+}
+
+func (s *state) RemoveState(ctx context.Context, chatID int64) error {
+	log := s.log.With("layer", "service_state", "operation", "DeleteState", "chat_id", chatID)
+	log.Info("deleting state for chat")
+
+	err := s.db.RemoveState(ctx, chatID)
+	if err != nil {
+		log.Error("failed to delete state", "error", err)
+		return err
+	}
+
+	log.Info("state deleted successfully")
+	return nil
 }

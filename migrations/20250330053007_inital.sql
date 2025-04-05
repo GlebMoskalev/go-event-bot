@@ -23,14 +23,6 @@ CREATE TABLE user_event(
     telegram_id BIGINT REFERENCES users(telegram_id),
     schedule_id int REFERENCES event(id)
 );
-CREATE TABLE staffs (
-    id SERIAL PRIMARY KEY,
-    firstname VARCHAR(30),
-    lastname  varchar(30),
-    patronymic varchar(30),
-    email varchar(50),
-    phone_number varchar(20)
-);
 CREATE TABLE states(
     chat_id BIGINT PRIMARY KEY,
     data JSONB,
@@ -44,7 +36,6 @@ SELECT 'down SQL query';
 DROP TABLE IF EXISTS user_event;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS event;
-DROP TABLE IF EXISTS staffs;
 DROP TABLE IF EXISTS states;
 DROP TYPE IF EXISTS role_type;
 DROP TYPE IF EXISTS event_status;

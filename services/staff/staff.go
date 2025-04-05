@@ -48,3 +48,29 @@ func (s *staff) GetByPhoneNumber(ctx context.Context, phoneNumber string) (model
 	log.Info("staff retrieved successfully")
 	return staff, err
 }
+
+func (s *staff) Create(ctx context.Context, staff models.Staff) error {
+	log := s.log.With("layer", "service_staff", "operation", "Create", "phone_number", staff.PhoneNumber)
+	log.Info("creating new staff member")
+
+	if err := s.db.CreateStaff(ctx, staff); err != nil {
+		log.Error("failed to create staff in repository", "error", err)
+		return err
+	}
+
+	log.Info("staff created successfully")
+	return nil
+}
+
+func (s *staff) Update(ctx context.Context, staff models.Staff) error {
+	log := s.log.With("layer", "service_staff", "operation", "Update", "phone_number", staff.PhoneNumber)
+	log.Info("updating staff member")
+
+	if err := s.db.UpdateStaff(ctx, staff); err != nil {
+		log.Error("failed to update staff in repository", "error", err)
+		return err
+	}
+
+	log.Info("staff updated successfully")
+	return nil
+}
