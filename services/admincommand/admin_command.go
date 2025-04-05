@@ -7,12 +7,12 @@ import (
 )
 
 type adminCmd struct {
-	db              repositories.DB
-	staffService    services.Staff
-	userService     services.User
-	scheduleService services.Event
-	state           services.State
-	log             *slog.Logger
+	db           repositories.DB
+	staffService services.Staff
+	userService  services.User
+	eventService services.Event
+	state        services.State
+	log          *slog.Logger
 }
 
 func New(
@@ -23,11 +23,11 @@ func New(
 	state services.State,
 	log *slog.Logger) services.AdminCommand {
 	return &adminCmd{
-		db:              db,
-		staffService:    staffSvc,
-		userService:     userSvc,
-		scheduleService: scheduleSvc,
-		state:           state,
-		log:             log,
+		db:           db,
+		staffService: staffSvc,
+		userService:  userSvc,
+		eventService: scheduleSvc,
+		state:        state,
+		log:          log,
 	}
 }

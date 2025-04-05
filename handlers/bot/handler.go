@@ -12,7 +12,7 @@ type handler struct {
 	callback     services.Callback
 	adminCommand services.AdminCommand
 	message      services.Message
-	schedule     services.Event
+	event        services.Event
 	state        services.State
 	log          *slog.Logger
 }

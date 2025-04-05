@@ -13,7 +13,7 @@ func (c *cmd) Event(ctx context.Context, msg tgbotapi.MessageConfig) tgbotapi.Me
 	log.Info("processing event command")
 
 	msg.Text = messages.EventTitle()
-	msg.ReplyMarkup = keyboards.ScheduleInline()
+	msg.ReplyMarkup = keyboards.EventInline()
 
 	log.Info("event message prepared successfully")
 	return msg

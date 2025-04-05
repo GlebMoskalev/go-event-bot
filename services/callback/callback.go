@@ -7,10 +7,10 @@ import (
 )
 
 type callback struct {
-	db              repositories.DB
-	userService     services.User
-	scheduleService services.Event
-	log             *slog.Logger
+	db           repositories.DB
+	userService  services.User
+	eventService services.Event
+	log          *slog.Logger
 }
 
 func New(
@@ -19,9 +19,9 @@ func New(
 	scheduleSvc services.Event,
 	log *slog.Logger) services.Callback {
 	return &callback{
-		db:              db,
-		userService:     userSvc,
-		scheduleService: scheduleSvc,
-		log:             log,
+		db:           db,
+		userService:  userSvc,
+		eventService: scheduleSvc,
+		log:          log,
 	}
 }

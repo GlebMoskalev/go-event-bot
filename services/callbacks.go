@@ -6,6 +6,6 @@ import (
 )
 
 type Callback interface {
-	PagerSchedule(ctx context.Context, query *tgbotapi.CallbackQuery, data ...string) tgbotapi.Chattable
+	PagerEvent(ctx context.Context, query *tgbotapi.CallbackQuery, data ...string) tgbotapi.Chattable
 	EventAll(ctx context.Context, query *tgbotapi.CallbackQuery) tgbotapi.Chattable
 }

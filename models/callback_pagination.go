@@ -12,7 +12,9 @@ const (
 	Prev Direction = "Prev"
 
 	PaginationPrefix = "pagination"
-	ScheduleContext  = "schedule"
+	EventContext     = "event"
+	AllContext       = "all"
+	DaysContext      = "dayas"
 
 	ItemsPerPage = 5
 )
@@ -22,13 +24,13 @@ type CallbackButton struct {
 	Data string
 }
 
-func PaginationSchedule(currentPage, maxPage int, direction Direction) CallbackButton {
+func PaginationEvent(currentPage, maxPage int, direction Direction) CallbackButton {
 	btn := CallbackButton{}
 	btn.Text = string(direction)
 	btn.Data = fmt.Sprintf(
 		"%s:%s:%s:%d:%d",
 		PaginationPrefix,
-		ScheduleContext,
+		EventContext,
 		strings.ToLower(string(direction)), currentPage, maxPage,
 	)
 	return btn

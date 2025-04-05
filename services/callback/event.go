@@ -18,7 +18,7 @@ func (c *callback) EventAll(ctx context.Context, query *tgbotapi.CallbackQuery) 
 	)
 	log.Info("processing request to get all events")
 
-	schedules, total, err := c.scheduleService.GetAll(ctx, 0, models.ItemsPerPage)
+	schedules, total, err := c.eventService.GetAll(ctx, 0, models.ItemsPerPage)
 	if err != nil {
 		log.Error("failed to fetch events", "error", err)
 		return tgbotapi.NewCallback(query.ID, messages.Error())
@@ -36,9 +36,9 @@ func (c *callback) EventAll(ctx context.Context, query *tgbotapi.CallbackQuery) 
 		"total", total,
 		"max_page", maxPage,
 	)
-	return tgbotapi.NewEditMessageTextAndMarkup(query.Message.Chat.ID, query.Message.MessageID, messages.AllEvents(schedules), keyboards.PaginationScheduleInline([]models.CallbackButton{
-		models.PaginationSchedule(1, maxPage, models.Prev),
+	return tgbotapi.NewEditMessageTextAndMarkup(query.Message.Chat.ID, query.Message.MessageID, messages.AllEvents(schedules), keyboards.PaginationEventInline([]models.CallbackButton{
+		models.PaginationEvent(1, maxPage, models.Prev),
 		models.PageNumber(1, maxPage),
-		models.PaginationSchedule(1, maxPage, models.Next),
+		models.PaginationEvent(1, maxPage, models.Next),
 	}))
 }

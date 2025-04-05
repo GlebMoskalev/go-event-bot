@@ -10,9 +10,9 @@ import (
 	"strconv"
 )
 
-func (c *callback) PagerSchedule(ctx context.Context, query *tgbotapi.CallbackQuery, data ...string) tgbotapi.Chattable {
+func (c *callback) PagerEvent(ctx context.Context, query *tgbotapi.CallbackQuery, data ...string) tgbotapi.Chattable {
 	log := logger.SetupLogger(c.log,
-		"service_callback", "PagerSchedule",
+		"service_callback", "PagerEvent",
 		"chat_id", query.Message.Chat.ID,
 		"query_id", query.ID,
 		"pager_type", data[0],
@@ -33,7 +33,7 @@ func (c *callback) PagerSchedule(ctx context.Context, query *tgbotapi.CallbackQu
 	}
 
 	var nextPage int
-	var schedules []models.Event
+	var events []models.Event
 
 	if pagerType == "next" {
 		nextPage = currentPage + 1
@@ -41,14 +41,14 @@ func (c *callback) PagerSchedule(ctx context.Context, query *tgbotapi.CallbackQu
 			log.Info("attempt to go beyond last page", "current_page", currentPage, "max_page", maxPage)
 			return tgbotapi.NewCallback(query.ID, "Это последняя страница")
 		}
-		schedules, _, err = c.scheduleService.GetAll(ctx, (nextPage-1)*models.ItemsPerPage, models.ItemsPerPage)
+		events, _, err = c.eventService.GetAll(ctx, (nextPage-1)*models.ItemsPerPage, models.ItemsPerPage)
 	} else if pagerType == "prev" {
 		nextPage = currentPage - 1
 		if nextPage < 1 {
 			log.Info("attempt to go before first page", "current_page", currentPage)
 			return tgbotapi.NewCallback(query.ID, "Это первая страница")
 		}
-		schedules, _, err = c.scheduleService.GetAll(
+		events, _, err = c.eventService.GetAll(
 			ctx, (nextPage-1)*models.ItemsPerPage, models.ItemsPerPage,
 		)
 	} else {
@@ -57,16 +57,16 @@ func (c *callback) PagerSchedule(ctx context.Context, query *tgbotapi.CallbackQu
 	}
 
 	if err != nil {
-		log.Error("failed to fetch schedules", "error", err, "page", nextPage)
+		log.Error("failed to fetch events", "error", err, "page", nextPage)
 		return tgbotapi.NewCallback(query.ID, "Произошла ошибка")
 	}
 
 	log.Info("pagination processed successfully")
 	return tgbotapi.NewEditMessageTextAndMarkup(
-		query.Message.Chat.ID, query.Message.MessageID, messages.AllEvents(schedules),
-		keyboards.PaginationScheduleInline([]models.CallbackButton{
-			models.PaginationSchedule(nextPage, maxPage, models.Prev),
+		query.Message.Chat.ID, query.Message.MessageID, messages.AllEvents(events),
+		keyboards.PaginationEventInline([]models.CallbackButton{
+			models.PaginationEvent(nextPage, maxPage, models.Prev),
 			models.PageNumber(nextPage, maxPage),
-			models.PaginationSchedule(nextPage, maxPage, models.Next),
+			models.PaginationEvent(nextPage, maxPage, models.Next),
 		}))
 }

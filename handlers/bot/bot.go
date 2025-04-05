@@ -42,7 +42,7 @@ func New(db repositories.DB, log *slog.Logger) handlers.Bot {
 		callback:     cbk,
 		adminCommand: adminCmd,
 		message:      msg,
-		schedule:     sched,
+		event:        sched,
 		state:        st,
 		log:          log,
 	}
