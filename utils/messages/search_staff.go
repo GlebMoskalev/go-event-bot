@@ -9,7 +9,7 @@ func StaffSearchMethod() string {
 	return "Выберите способ поиска сотрудника"
 }
 
-func StaffNodFound() string {
+func StaffNodFoundSearch() string {
 	return "Сотрудников нет"
 }
 

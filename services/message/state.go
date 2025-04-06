@@ -68,7 +68,7 @@ func (m *msg) stateSearchPhoneNumber(ctx context.Context, msg tgbotapi.MessageCo
 	if err != nil {
 		if errors.Is(err, apperrors.ErrNotFoundStaff) {
 			log.Warn("no staff found for phone number", "phone_number", phoneNumber)
-			msg.Text = messages.StaffNotFound()
+			msg.Text = messages.StaffNodFoundSearch()
 			return msg
 		}
 		log.Error("failed to retrieve staff list", "error", err)
@@ -107,7 +107,7 @@ func (m *msg) stateSearchLastName(ctx context.Context, msg tgbotapi.MessageConfi
 	if err != nil {
 		if errors.Is(err, apperrors.ErrNotFoundStaff) {
 			log.Warn("no staff found for last name")
-			msg.Text = messages.StaffNodFound()
+			msg.Text = messages.StaffNodFoundSearch()
 			return msg
 		}
 		log.Error("failed to retrieve staff list", "error", err)
