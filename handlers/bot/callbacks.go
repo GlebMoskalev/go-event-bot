@@ -27,7 +27,7 @@ func (h *handler) Callbacks(ctx context.Context, tgbot *tgbotapi.BotAPI, update 
 			log.Error("failed to send pagination message", "error", err)
 			return
 		}
-	} else if split[0] == "event" && split[1] == "all" {
+	} else if split[0] == models.EventContext && split[1] == models.AllContext {
 		log.Info("handling event all callback")
 		msg := h.callback.EventAll(ctx, update.CallbackQuery)
 		_, err := tgbot.Request(msg)
@@ -35,7 +35,7 @@ func (h *handler) Callbacks(ctx context.Context, tgbot *tgbotapi.BotAPI, update 
 			log.Error("failed to send event all message", "error", err)
 			return
 		}
-	} else if split[0] == "back" && split[1] == "event" {
+	} else if split[0] == models.EventContext && split[1] == models.BackContext {
 		log.Info("handling back to events callback")
 		msg := tgbotapi.NewEditMessageTextAndMarkup(
 			update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID,
@@ -46,6 +46,8 @@ func (h *handler) Callbacks(ctx context.Context, tgbot *tgbotapi.BotAPI, update 
 			log.Error("failed to send back to events message", "error", err)
 			return
 		}
+	} else if split[0] == "null" {
+		log.Info("callback null data received")
 	} else {
 		log.Warn("unknown callback data received")
 		msg := tgbotapi.NewCallback(update.CallbackQuery.ID, "Функция не реализована")

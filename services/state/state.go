@@ -26,7 +26,7 @@ func (s *state) StartAddStaff(ctx context.Context, chatID int64) error {
 	log := logger.SetupLogger(s.log, "service_state", "StartAddStaff", "chat_id", chatID)
 	log.Info("starting staff registration process")
 
-	err := s.db.SetState(ctx, chatID, models.StateStaffRegisterFullName, []byte("{}"))
+	err := s.db.SetState(ctx, chatID, models.StateStaffRegisterPhoneNumber, []byte("{}"))
 	if err != nil {
 		log.Error("failed to set initial state", "error", err)
 		return err
@@ -43,17 +43,27 @@ func (s *state) RegisterStaffFullName(ctx context.Context, chatID int64, firstNa
 	)
 	log.Info("registering staff full name")
 
-	staff := models.Staff{
-		FirstName:  firstName,
-		LastName:   lastName,
-		Patronymic: patronymic,
+	_, data, err := s.db.GetStateAndData(ctx, chatID)
+	if err != nil {
+		log.Error("failed to get current state and data", "error", err)
+		return err
 	}
-	data, err := json.Marshal(staff)
+	var staff models.Staff
+	err = json.Unmarshal(data, &staff)
+	if err != nil {
+		log.Error("failed to unmarshal staff data", "error", err)
+		return err
+	}
+	staff.FirstName = firstName
+	staff.LastName = lastName
+	staff.Patronymic = patronymic
+
+	data, err = json.Marshal(staff)
 	if err != nil {
 		log.Error("failed to marshal staff data", "error", err)
 		return err
 	}
-	err = s.db.SetState(ctx, chatID, models.StateStaffRegisterPhoneNumber, data)
+	err = s.db.SetState(ctx, chatID, models.StateStaffRegisterConfirm, data)
 	if err != nil {
 		log.Error("failed to set state to phone number registration", "error", err)
 	}
@@ -91,7 +101,7 @@ func (s *state) RegisterStaffNumberPhone(ctx context.Context, chatID int64, phon
 		return err
 	}
 
-	err = s.db.SetState(ctx, chatID, models.StateStaffRegisterConfirm, updateData)
+	err = s.db.SetState(ctx, chatID, models.StateStaffRegisterFullName, updateData)
 	if err != nil {
 		log.Error("failed to set state to confirmation", "error", err)
 		return err

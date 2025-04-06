@@ -14,7 +14,8 @@ const (
 	PaginationPrefix = "pagination"
 	EventContext     = "event"
 	AllContext       = "all"
-	DaysContext      = "dayas"
+	DaysContext      = "days"
+	BackContext      = "back"
 
 	ItemsPerPage = 5
 )

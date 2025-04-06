@@ -25,7 +25,8 @@ func PaginationEventInline(paginationButtons []models.CallbackButton) tgbotapi.I
 	for _, button := range paginationButtons {
 		extraRow = append(extraRow, tgbotapi.NewInlineKeyboardButtonData(button.Text, button.Data))
 	}
-	rowBack := tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData("Вернутся обратно", "back:event"))
+	rowBack := tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData(
+		"Вернутся обратно", fmt.Sprintf("%s:%s", models.EventContext, models.BackContext)))
 	return tgbotapi.NewInlineKeyboardMarkup(extraRow, rowBack)
 }
 

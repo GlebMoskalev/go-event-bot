@@ -16,7 +16,7 @@ func (a *adminCmd) AddStaff(ctx context.Context, msg tgbotapi.MessageConfig) tgb
 		msg.Text = "Произошла ошибка"
 	} else {
 		log.Info("staff addition process started successfully")
-		msg.Text = "Введите ФИО сотрудника в формате: Иван Иванович Иванов"
+		msg.Text = "Введите номер телефона в формате:\n 79137777777"
 	}
 	return msg
 }

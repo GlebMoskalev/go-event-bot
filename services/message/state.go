@@ -56,7 +56,27 @@ func (m *msg) stateStaffRegisterFullName(ctx context.Context, msg tgbotapi.Messa
 		msg.Text = "Произошла ошибка"
 		return msg
 	}
-	msg.Text = "Введите номер телефона в формате 79137777777"
+
+	_, data, err := m.stateService.GetWithData(ctx, msg.ChatID)
+	if err != nil {
+		log.Error("failed to retrieve staff data", "error", err)
+		msg.Text = "Произошла ошибка"
+		return msg
+	}
+
+	var staff models.Staff
+	err = json.Unmarshal(data, &staff)
+	if err != nil {
+		log.Error("failed to unmarshal staff data", "error", err)
+		msg.Text = "Произошла ошибка"
+		return msg
+	}
+
+	msg.Text = fmt.Sprintf(
+		"Подтвердите, что вы хотите добавить сотрудника:\n%s %s %s\n%s\n\n Введите 'да', если подтверждаете",
+		staff.LastName, staff.FirstName, staff.Patronymic,
+		staff.PhoneNumber,
+	)
 
 	log.Info("staff full name registered successfully")
 	return msg
@@ -95,26 +115,7 @@ func (m *msg) stateStaffRegisterPhoneNumber(ctx context.Context, msg tgbotapi.Me
 		return msg
 	}
 
-	_, data, err := m.stateService.GetWithData(ctx, msg.ChatID)
-	if err != nil {
-		log.Error("failed to retrieve staff data", "error", err)
-		msg.Text = "Произошла ошибка"
-		return msg
-	}
-
-	var staff models.Staff
-	err = json.Unmarshal(data, &staff)
-	if err != nil {
-		log.Error("failed to unmarshal staff data", "error", err)
-		msg.Text = "Произошла ошибка"
-		return msg
-	}
-
-	msg.Text = fmt.Sprintf(
-		"Подтвердите, что вы хотите добавить сотрудника:\n%s %s %s\n%s\n\n Введите 'да', если подтверждаете",
-		staff.LastName, staff.FirstName, staff.Patronymic,
-		staff.PhoneNumber,
-	)
+	msg.Text = "Введите ФИО сотрудника в формате:\n Иван Иванов Иванович"
 
 	log.Info("phone number registered successfully")
 	return msg
