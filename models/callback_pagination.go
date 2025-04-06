@@ -16,6 +16,10 @@ const (
 	AllContext       = "all"
 	DaysContext      = "days"
 	BackContext      = "back"
+	CancelContext    = "cancel"
+	StaffContext     = "staff"
+	AddContext       = "add"
+	AppendContext    = "append"
 
 	ItemsPerPage = 5
 )
@@ -30,8 +34,8 @@ func PaginationEvent(currentPage, maxPage int, direction Direction) CallbackButt
 	btn.Text = string(direction)
 	btn.Data = fmt.Sprintf(
 		"%s:%s:%s:%d:%d",
-		PaginationPrefix,
 		EventContext,
+		PaginationPrefix,
 		strings.ToLower(string(direction)), currentPage, maxPage,
 	)
 	return btn

@@ -19,7 +19,7 @@ func (h *handler) Callbacks(ctx context.Context, tgbot *tgbotapi.BotAPI, update 
 	log.Info("processing pagination request")
 
 	split := strings.Split(update.CallbackQuery.Data, ":")
-	if split[0] == models.PaginationPrefix && split[1] == models.EventContext {
+	if split[0] == models.EventContext && split[1] == models.PaginationPrefix {
 		log.Info("handling pagination event callback")
 		msg := h.callback.PagerEvent(ctx, update.CallbackQuery, split[2:]...)
 		_, err := tgbot.Request(msg)
@@ -41,6 +41,20 @@ func (h *handler) Callbacks(ctx context.Context, tgbot *tgbotapi.BotAPI, update 
 			update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID,
 			"Мероприятия:", keyboards.EventInline(),
 		)
+		_, err := tgbot.Request(msg)
+		if err != nil {
+			log.Error("failed to send back to events message", "error", err)
+			return
+		}
+	} else if split[0] == models.StaffContext && split[1] == models.AddContext && split[2] == models.CancelContext {
+		msg := h.callback.CancelAddStaff(ctx, update.CallbackQuery)
+		_, err := tgbot.Request(msg)
+		if err != nil {
+			log.Error("failed to send back to events message", "error", err)
+			return
+		}
+	} else if split[0] == models.StaffContext && split[1] == models.AddContext && split[2] == models.AppendContext {
+		msg := h.callback.AppendStaff(ctx, update.CallbackQuery)
 		_, err := tgbot.Request(msg)
 		if err != nil {
 			log.Error("failed to send back to events message", "error", err)

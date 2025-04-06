@@ -8,6 +8,7 @@ import (
 	"github.com/GlebMoskalev/go-event-bot/models"
 	"github.com/GlebMoskalev/go-event-bot/pkg/logger"
 	"github.com/GlebMoskalev/go-event-bot/utils/apperrors"
+	"github.com/GlebMoskalev/go-event-bot/utils/keyboards"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"regexp"
 	"strings"
@@ -23,11 +24,13 @@ func (m *msg) State(ctx context.Context, msg tgbotapi.MessageConfig, state model
 
 	switch state {
 	case models.StateStaffRegisterFullName:
+		msg.ReplyMarkup = keyboards.AgreeStaff()
 		return m.stateStaffRegisterFullName(ctx, msg)
 	case models.StateStaffRegisterPhoneNumber:
+		msg.ReplyMarkup = keyboards.CancelAddStaff()
 		return m.stateStaffRegisterPhoneNumber(ctx, msg)
-	case models.StateStaffRegisterConfirm:
-		return m.stateStaffRegisterConfirm(ctx, msg)
+	//case models.StateStaffRegisterConfirm:
+	//	return m.stateStaffRegisterConfirm(ctx, msg)
 	default:
 		log.Warn("unknown state encountered")
 		msg.Text = "Произошла ошибка"
@@ -121,48 +124,48 @@ func (m *msg) stateStaffRegisterPhoneNumber(ctx context.Context, msg tgbotapi.Me
 	return msg
 }
 
-func (m *msg) stateStaffRegisterConfirm(ctx context.Context, msg tgbotapi.MessageConfig) tgbotapi.MessageConfig {
-	log := logger.SetupLogger(m.log,
-		"service_message", "StateStaffRegisterConfirm",
-		"chat_id", msg.ChatID,
-		"response", msg.Text,
-	)
-	log.Info("processing staff registration confirmation")
-
-	if msg.Text == "да" {
-		_, data, err := m.stateService.GetWithData(ctx, msg.ChatID)
-		if err != nil {
-			log.Error("failed to retrieve staff data", "error", err)
-			msg.Text = "Произошла ошибка"
-			return msg
-		}
-		var staff models.Staff
-		err = json.Unmarshal(data, &staff)
-		if err != nil {
-			log.Error("failed to unmarshal staff data", "error", err)
-			msg.Text = "Произошла ошибка"
-			return msg
-		}
-
-		err = m.staffService.Create(ctx, staff)
-		if err != nil {
-			log.Error("failed to create staff", "error", err)
-			msg.Text = "Произошла ошибка"
-			return msg
-		}
-
-		log.Info("staff member created successfully")
-		msg.Text = "Сотрудник добавлен"
-	} else {
-		log.Info("staff creation cancelled")
-		msg.Text = "Добавление сотрудника отменено"
-	}
-
-	err := m.stateService.ConfirmAddStaff(ctx, msg.ChatID)
-	if err != nil {
-		log.Error("failed to reset state", "error", err)
-		msg.Text = "Произошла ошибка"
-		return msg
-	}
-	return msg
-}
+//func (m *msg) stateStaffRegisterConfirm(ctx context.Context, msg tgbotapi.MessageConfig) tgbotapi.MessageConfig {
+//	log := logger.SetupLogger(m.log,
+//		"service_message", "StateStaffRegisterConfirm",
+//		"chat_id", msg.ChatID,
+//		"response", msg.Text,
+//	)
+//	log.Info("processing staff registration confirmation")
+//
+//	if msg.Text == "да" {
+//		_, data, err := m.stateService.GetWithData(ctx, msg.ChatID)
+//		if err != nil {
+//			log.Error("failed to retrieve staff data", "error", err)
+//			msg.Text = "Произошла ошибка"
+//			return msg
+//		}
+//		var staff models.Staff
+//		err = json.Unmarshal(data, &staff)
+//		if err != nil {
+//			log.Error("failed to unmarshal staff data", "error", err)
+//			msg.Text = "Произошла ошибка"
+//			return msg
+//		}
+//
+//		err = m.staffService.Create(ctx, staff)
+//		if err != nil {
+//			log.Error("failed to create staff", "error", err)
+//			msg.Text = "Произошла ошибка"
+//			return msg
+//		}
+//
+//		log.Info("staff member created successfully")
+//		msg.Text = "Сотрудник добавлен"
+//	} else {
+//		log.Info("staff creation cancelled")
+//		msg.Text = "Добавление сотрудника отменено"
+//	}
+//
+//	err := m.stateService.ConfirmAddStaff(ctx, msg.ChatID)
+//	if err != nil {
+//		log.Error("failed to reset state", "error", err)
+//		msg.Text = "Произошла ошибка"
+//		return msg
+//	}
+//	return msg
+//}

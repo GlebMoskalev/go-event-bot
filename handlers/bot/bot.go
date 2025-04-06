@@ -31,8 +31,8 @@ func New(db repositories.DB, log *slog.Logger) handlers.Bot {
 	stf := staff.New(db, log)
 	sched := event.New(db, log)
 	cmd := command.New(db, usr, sched, log)
-	cbk := callback.New(db, usr, sched, log)
 	st := state.New(db, log)
+	cbk := callback.New(db, usr, sched, st, stf, log)
 	adminCmd := admincommand.New(db, stf, usr, sched, st, log)
 	msg := message.New(db, stf, usr, cmd, st, log)
 	handler := &handler{

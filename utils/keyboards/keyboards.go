@@ -42,3 +42,29 @@ func EventInline() tgbotapi.InlineKeyboardMarkup {
 		),
 	)
 }
+
+func CancelAddStaff() tgbotapi.InlineKeyboardMarkup {
+	return tgbotapi.NewInlineKeyboardMarkup(tgbotapi.NewInlineKeyboardRow(
+		tgbotapi.NewInlineKeyboardButtonData(
+			"Отменить добавление",
+			fmt.Sprintf("%s:%s:%s", models.StaffContext, models.AddContext, models.CancelContext),
+		),
+	))
+}
+
+func EmptyInlineKeyboard() tgbotapi.InlineKeyboardMarkup {
+	return tgbotapi.NewInlineKeyboardMarkup([]tgbotapi.InlineKeyboardButton{})
+}
+
+func AgreeStaff() tgbotapi.InlineKeyboardMarkup {
+	return tgbotapi.NewInlineKeyboardMarkup(tgbotapi.NewInlineKeyboardRow(
+		tgbotapi.NewInlineKeyboardButtonData(
+			"Добавить",
+			fmt.Sprintf("%s:%s:%s", models.StaffContext, models.AddContext, models.AppendContext),
+		),
+		tgbotapi.NewInlineKeyboardButtonData(
+			"Отменить",
+			fmt.Sprintf("%s:%s:%s", models.StaffContext, models.AddContext, models.CancelContext),
+		),
+	))
+}

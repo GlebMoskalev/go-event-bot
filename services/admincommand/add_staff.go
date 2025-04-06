@@ -3,6 +3,7 @@ package admincommand
 import (
 	"context"
 	"github.com/GlebMoskalev/go-event-bot/pkg/logger"
+	"github.com/GlebMoskalev/go-event-bot/utils/keyboards"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
@@ -17,6 +18,7 @@ func (a *adminCmd) AddStaff(ctx context.Context, msg tgbotapi.MessageConfig) tgb
 	} else {
 		log.Info("staff addition process started successfully")
 		msg.Text = "Введите номер телефона в формате:\n 79137777777"
+		msg.ReplyMarkup = keyboards.CancelAddStaff()
 	}
 	return msg
 }
