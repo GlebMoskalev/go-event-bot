@@ -147,3 +147,48 @@ func (p *postgres) DeleteStaff(ctx context.Context, phoneNumber string) error {
 	log.Info("staff record deleted successfully", "rows_affected", rowsAffected)
 	return nil
 }
+
+func (p *postgres) GetListStaffByPhoneOrLastName(ctx context.Context, phoneNumber, lastName string) ([]models.Staff, error) {
+	log := logger.SetupLogger(p.log,
+		"repository_staff", "GetStaffByPhoneOrLastname",
+		"phone_number", phoneNumber,
+		"last_name", lastName,
+	)
+	log.Info("fetching staff list")
+	query := `
+	SELECT
+	    firstname,
+	    lastname,
+	    patronymic,
+	    phone_number
+	FROM staffs
+	WHERE lastname = $1 or phone_number = $2
+`
+	rows, err := p.dbStaff.QueryContext(ctx, query, lastName, phoneNumber)
+	if err != nil {
+		log.Error("failed to fetch staff list", "error", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var staffList []models.Staff
+	for rows.Next() {
+		var staff models.Staff
+		err = rows.Scan(&staff.FirstName, &staff.LastName, &staff.Patronymic, &staff.PhoneNumber)
+		if err != nil {
+			log.Error("failed to scan staff row", "error", err)
+			return nil, err
+		}
+		staffList = append(staffList, staff)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Error("error occurred while iterating rows", "error", err)
+		return nil, err
+	}
+
+	if len(staffList) == 0 {
+		return nil, apperrors.ErrNotFoundStaff
+	}
+	return staffList, nil
+}

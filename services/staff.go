@@ -9,4 +9,5 @@ type Staff interface {
 	GetByPhoneNumber(ctx context.Context, phoneNumber string) (models.Staff, error)
 	Create(ctx context.Context, staff models.Staff) error
 	Update(ctx context.Context, staff models.Staff) error
+	GetListByPhoneOrLastName(ctx context.Context, phoneNumber, lastName string) ([]models.Staff, error)
 }

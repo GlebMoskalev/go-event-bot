@@ -14,4 +14,6 @@ type State interface {
 	RegisterStaffFullName(ctx context.Context, chatID int64, firstName, lastName, patronymic string) error
 	RegisterStaffNumberPhone(ctx context.Context, chatID int64, numberPhone string) error
 	ConfirmAddStaff(ctx context.Context, chatID int64) error
+
+	StartSearchByLastName(ctx context.Context, chatID int64) error
 }

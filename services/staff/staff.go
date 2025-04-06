@@ -84,3 +84,25 @@ func (s *staff) Update(ctx context.Context, staff models.Staff) error {
 	log.Info("staff updated successfully")
 	return nil
 }
+
+func (s *staff) GetListByPhoneOrLastName(ctx context.Context, phoneNumber, lastName string) ([]models.Staff, error) {
+	log := logger.SetupLogger(s.log,
+		"service_staff", "Update",
+		"phone_number", phoneNumber,
+		"last_name", lastName,
+	)
+	log.Info("getting list staff")
+
+	staffList, err := s.db.GetListStaffByPhoneOrLastName(ctx, phoneNumber, lastName)
+	if err != nil {
+		if errors.Is(err, apperrors.ErrNotFoundStaff) {
+			log.Warn("not found staff list")
+			return nil, err
+		}
+		log.Error("failed to retrieve staff list", "error", err)
+		return nil, err
+	}
+
+	log.Info("staff list retrieved successfully")
+	return staffList, nil
+}

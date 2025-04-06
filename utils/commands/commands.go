@@ -11,6 +11,7 @@ const (
 	CmdAdminPanel  = "admin_panel"
 	CmdChangeEvent = "change_event"
 	CmdAddStaff    = "add_staff"
+	CmdSearchStaff = "search_staff"
 )
 
 var CommandAccess = map[string]models.Role{
@@ -19,6 +20,7 @@ var CommandAccess = map[string]models.Role{
 	CmdAdminPanel:  models.RoleAdmin,
 	CmdChangeEvent: models.RoleAdmin,
 	CmdAddStaff:    models.RoleAdmin,
+	CmdSearchStaff: models.RoleAdmin,
 }
 
 var BotCommands = map[models.Role][]tgbotapi.BotCommand{
@@ -46,6 +48,10 @@ var BotCommands = map[models.Role][]tgbotapi.BotCommand{
 		{
 			Command:     CmdAddStaff,
 			Description: "Добавить сотрудника",
+		},
+		{
+			Command:     CmdSearchStaff,
+			Description: "Поиск сотрудника",
 		},
 	},
 }

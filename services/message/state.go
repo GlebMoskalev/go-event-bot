@@ -12,6 +12,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"regexp"
 	"strings"
+	"unicode/utf8"
 )
 
 func (m *msg) State(ctx context.Context, msg tgbotapi.MessageConfig, state models.State) tgbotapi.MessageConfig {
@@ -29,11 +30,52 @@ func (m *msg) State(ctx context.Context, msg tgbotapi.MessageConfig, state model
 	case models.StateStaffRegisterPhoneNumber:
 		msg.ReplyMarkup = keyboards.CancelAddStaff()
 		return m.stateStaffRegisterPhoneNumber(ctx, msg)
+	case models.StateSearchLastName:
+		return m.stateSearchLastName(ctx, msg)
 	default:
 		log.Warn("unknown state encountered")
 		msg.Text = "Произошла ошибка"
 		return msg
 	}
+}
+
+func (m *msg) stateSearchLastName(ctx context.Context, msg tgbotapi.MessageConfig) tgbotapi.MessageConfig {
+	log := logger.SetupLogger(m.log,
+		"service_message", "stateSearchLastName",
+		"chat_id", msg.ChatID,
+		"text", msg.Text,
+	)
+	log.Info("processing get staff by last name")
+
+	lastName := strings.TrimSpace(msg.Text)
+	if utf8.RuneCountInString(lastName) < 2 {
+		log.Warn("last name too short", "last_name", lastName)
+		msg.Text = messages.LastNameTooShort()
+		return msg
+	}
+
+	err := m.stateService.RemoveState(ctx, msg.ChatID)
+	if err != nil {
+		log.Error("failed to remove state", "error", err)
+		msg.Text = messages.Error()
+		return msg
+	}
+
+	staffList, err := m.staffService.GetListByPhoneOrLastName(ctx, "", lastName)
+	if err != nil {
+		if errors.Is(err, apperrors.ErrNotFoundStaff) {
+			log.Warn("no staff found for last name")
+			msg.Text = messages.StaffNodFound()
+			return msg
+		}
+		log.Error("failed to retrieve staff list", "error", err)
+		msg.Text = messages.Error()
+		return msg
+	}
+
+	log.Info("staff list retrieved successfully", "count", len(staffList))
+	msg.Text = messages.StaffList(staffList)
+	return msg
 }
 
 func (m *msg) stateStaffRegisterFullName(ctx context.Context, msg tgbotapi.MessageConfig) tgbotapi.MessageConfig {
@@ -51,7 +93,7 @@ func (m *msg) stateStaffRegisterFullName(ctx context.Context, msg tgbotapi.Messa
 		return msg
 	}
 
-	err := m.stateService.RegisterStaffFullName(ctx, msg.ChatID, fullNameSplit[0], fullNameSplit[1], fullNameSplit[2])
+	err := m.stateService.RegisterStaffFullName(ctx, msg.ChatID, fullNameSplit[1], fullNameSplit[0], fullNameSplit[2])
 	if err != nil {
 		log.Error("failed to register staff full name", "error", err)
 		msg.Text = messages.Error()

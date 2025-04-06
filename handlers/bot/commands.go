@@ -62,18 +62,21 @@ func (h *handler) Commands(ctx context.Context, tgbot *tgbotapi.BotAPI, update t
 				h.log.Error("failed to set menu commands", "error", err)
 			}
 		}
-	case "event":
+	case commands.CmdEvent:
 		log.Info("handling event command")
 		msg = h.command.Event(ctx, msg)
-	case "admin_panel":
+	case commands.CmdAdminPanel:
 		log.Info("handling admin panel command")
 		msg = h.adminCommand.Panel(ctx, msg)
-	case "change_event":
+	case commands.CmdChangeEvent:
 		log.Info("handling change event command")
 		msg = h.adminCommand.ChangeEvent(ctx, msg)
-	case "add_staff":
+	case commands.CmdAddStaff:
 		log.Info("handling add staff command")
 		msg = h.adminCommand.AddStaff(ctx, msg)
+	case commands.CmdSearchStaff:
+		log.Info("handling search staff command")
+		msg = h.adminCommand.SearchStaff(ctx, msg)
 	}
 	h.SendMessage(tgbot, msg)
 }

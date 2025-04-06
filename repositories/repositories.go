@@ -31,6 +31,7 @@ type Staff interface {
 	CreateStaff(ctx context.Context, staff models.Staff) error
 	UpdateStaff(ctx context.Context, staff models.Staff) error
 	DeleteStaff(ctx context.Context, phoneNumber string) error
+	GetListStaffByPhoneOrLastName(ctx context.Context, phoneNumber, lastName string) ([]models.Staff, error)
 }
 
 type State interface {

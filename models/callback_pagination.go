@@ -11,15 +11,18 @@ const (
 	Next Direction = "Next"
 	Prev Direction = "Prev"
 
-	PaginationPrefix = "pagination"
-	EventContext     = "event"
-	AllContext       = "all"
-	DaysContext      = "days"
-	BackContext      = "back"
-	CancelContext    = "cancel"
-	StaffContext     = "staff"
-	AddContext       = "add"
-	AppendContext    = "append"
+	PaginationPrefix   = "pagination"
+	EventContext       = "event"
+	AllContext         = "all"
+	DaysContext        = "days"
+	BackContext        = "back"
+	CancelContext      = "cancel"
+	StaffContext       = "staff"
+	AddContext         = "add"
+	AppendContext      = "append"
+	SearchContext      = "search"
+	LastNameContext    = "lastName"
+	PhoneNumberContext = "phoneNumber"
 
 	ItemsPerPage = 5
 )

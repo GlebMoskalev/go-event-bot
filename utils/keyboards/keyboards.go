@@ -68,3 +68,16 @@ func AgreeStaff() tgbotapi.InlineKeyboardMarkup {
 		),
 	))
 }
+
+func SearchMethodStaff() tgbotapi.InlineKeyboardMarkup {
+	return tgbotapi.NewInlineKeyboardMarkup(tgbotapi.NewInlineKeyboardRow(
+		tgbotapi.NewInlineKeyboardButtonData(
+			"По фамилии",
+			fmt.Sprintf("%s:%s:%s", models.StaffContext, models.SearchContext, models.LastNameContext),
+		),
+		tgbotapi.NewInlineKeyboardButtonData(
+			"По номеру телефона",
+			fmt.Sprintf("%s:%s:%s", models.StaffContext, models.SearchContext, models.PhoneNumberContext),
+		),
+	))
+}
