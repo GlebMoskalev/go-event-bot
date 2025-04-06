@@ -3,8 +3,10 @@ package callback
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/GlebMoskalev/go-event-bot/models"
 	"github.com/GlebMoskalev/go-event-bot/pkg/logger"
+	"github.com/GlebMoskalev/go-event-bot/utils/apperrors"
 	"github.com/GlebMoskalev/go-event-bot/utils/keyboards"
 	"github.com/GlebMoskalev/go-event-bot/utils/messages"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -18,10 +20,20 @@ func (c *callback) CancelAddStaff(ctx context.Context, query *tgbotapi.CallbackQ
 	)
 	log.Info("starting cancellation of staff addition process")
 
-	err := c.stateService.RemoveState(ctx, query.Message.Chat.ID)
+	_, err := c.stateService.Get(ctx, query.Message.Chat.ID)
+	if err != nil {
+		if errors.Is(err, apperrors.ErrNotFoundState) {
+			log.Warn("state not found")
+			return tgbotapi.NewCallback(query.ID, messages.StaffAdditionMissing())
+		}
+		log.Error("failed to get state", "error", err)
+		return tgbotapi.NewCallback(query.ID, messages.Error())
+	}
+
+	err = c.stateService.RemoveState(ctx, query.Message.Chat.ID)
 	if err != nil {
 		log.Error("failed to remove state", "error", err)
-		return tgbotapi.NewCallback(query.ID, "Произошла ошибка")
+		return tgbotapi.NewCallback(query.ID, messages.Error())
 	}
 
 	log.Info("staff addition cancelled successfully")

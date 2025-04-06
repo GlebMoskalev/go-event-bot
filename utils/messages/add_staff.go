@@ -34,3 +34,7 @@ func StaffAdded() string {
 func StaffAdditionCancelled() string {
 	return "Добавление сотрудника отменено"
 }
+
+func StaffAdditionMissing() string {
+	return "Не найден начатый процесс добавления сотрудника"
+}
