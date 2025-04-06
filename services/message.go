@@ -7,6 +7,7 @@ import (
 )
 
 type Message interface {
-	Contact(ctx context.Context, msg tgbotapi.MessageConfig, contact *tgbotapi.Contact) (tgbotapi.MessageConfig, error)
+	Contact(ctx context.Context, msg tgbotapi.MessageConfig,
+		contact *tgbotapi.Contact) (tgbotapi.MessageConfig, models.Role, error)
 	State(ctx context.Context, msg tgbotapi.MessageConfig, state models.State) tgbotapi.MessageConfig
 }

@@ -5,4 +5,5 @@ type Staff struct {
 	LastName    string
 	Patronymic  string
 	PhoneNumber string
+	Role        Role
 }

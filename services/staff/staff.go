@@ -57,6 +57,9 @@ func (s *staff) Create(ctx context.Context, staff models.Staff) error {
 	)
 	log.Info("creating new staff member")
 
+	if staff.Role == "" {
+		staff.Role = models.RoleStaff
+	}
 	if err := s.db.CreateStaff(ctx, staff); err != nil {
 		log.Error("failed to create staff", "error", err)
 		return err
@@ -70,6 +73,9 @@ func (s *staff) Update(ctx context.Context, staff models.Staff) error {
 	log := logger.SetupLogger(s.log, "service_staff", "Update", "phone_number", staff.PhoneNumber)
 	log.Info("updating staff member")
 
+	if staff.Role == "" {
+		staff.Role = models.RoleStaff
+	}
 	if err := s.db.UpdateStaff(ctx, staff); err != nil {
 		log.Error("failed to update staff", "error", err)
 		return err

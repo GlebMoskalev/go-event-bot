@@ -26,18 +26,16 @@ func (h *handler) Message(ctx context.Context, tgbot *tgbotapi.BotAPI, update tg
 	} else if update.Message.Contact != nil {
 		log.Info("handling contact message", "phone_number", update.Message.Contact.PhoneNumber)
 		var err error
-		msg, err = h.message.Contact(ctx, msg, update.Message.Contact)
-		if err == nil {
-			menuCommands := commands.GetMenuCommands(models.RoleStaff)
-			_, err := tgbot.Request(tgbotapi.NewSetMyCommandsWithScope(
-				tgbotapi.NewBotCommandScopeChat(chatID),
-				menuCommands...,
-			))
-			if err != nil {
-				h.log.Error("failed to set menu commands", "error", err)
-			}
+		var role models.Role
+		msg, role, err = h.message.Contact(ctx, msg, update.Message.Contact)
+		menuCommands := commands.GetMenuCommands(role)
+		_, err = tgbot.Request(tgbotapi.NewSetMyCommandsWithScope(
+			tgbotapi.NewBotCommandScopeChat(chatID),
+			menuCommands...,
+		))
+		if err != nil {
+			h.log.Error("failed to set menu commands", "error", err)
 		}
-		_ = err
 		h.SendMessage(tgbot, msg)
 	} else {
 		log.Info("handling plain text message", "text", update.Message.Text)

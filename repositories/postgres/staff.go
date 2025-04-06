@@ -23,7 +23,8 @@ func (p *postgres) GetStaffByPhoneNumber(ctx context.Context, phoneNumber string
 		firstname, 
 		lastname, 
 		patronymic, 
-		phone_number
+		phone_number,
+		role
 	FROM staffs
 	WHERE phone_number = $1
 `
@@ -33,6 +34,7 @@ func (p *postgres) GetStaffByPhoneNumber(ctx context.Context, phoneNumber string
 		&staff.LastName,
 		&staff.Patronymic,
 		&staff.PhoneNumber,
+		&staff.Role,
 	)
 
 	if err != nil {
@@ -89,11 +91,13 @@ func (p *postgres) UpdateStaff(ctx context.Context, staff models.Staff) error {
 	UPDATE staffs
 	SET firstname = $1, 
 		lastname = $2, 
-		patronymic = $3
-	WHERE phone_number = $4
+		patronymic = $3,
+		role = $4
+	WHERE phone_number = $5
 `
 
-	result, err := p.dbStaff.ExecContext(ctx, query, staff.FirstName, staff.LastName, staff.Patronymic, staff.PhoneNumber)
+	result, err := p.dbStaff.ExecContext(ctx,
+		query, staff.FirstName, staff.LastName, staff.Patronymic, staff.Role, staff.PhoneNumber)
 	if err != nil {
 		log.Error("failed to update staff", "error", err)
 		return err
