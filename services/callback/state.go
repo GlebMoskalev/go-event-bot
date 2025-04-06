@@ -6,6 +6,7 @@ import (
 	"github.com/GlebMoskalev/go-event-bot/models"
 	"github.com/GlebMoskalev/go-event-bot/pkg/logger"
 	"github.com/GlebMoskalev/go-event-bot/utils/keyboards"
+	"github.com/GlebMoskalev/go-event-bot/utils/messages"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
@@ -27,7 +28,7 @@ func (c *callback) CancelAddStaff(ctx context.Context, query *tgbotapi.CallbackQ
 	return tgbotapi.NewEditMessageTextAndMarkup(
 		query.Message.Chat.ID,
 		query.Message.MessageID,
-		"Добавление сотрудника отменено",
+		messages.StaffAdditionCancelled(),
 		keyboards.EmptyInlineKeyboard(),
 	)
 }
@@ -55,20 +56,20 @@ func (c *callback) AppendStaff(ctx context.Context, query *tgbotapi.CallbackQuer
 	err = c.staffService.Create(ctx, staff)
 	if err != nil {
 		log.Error("failed to create staff", "error", err)
-		return tgbotapi.NewCallback(query.ID, "Произошла ошибка")
+		return tgbotapi.NewCallback(query.ID, messages.Error())
 	}
 
 	err = c.stateService.ConfirmAddStaff(ctx, query.Message.Chat.ID)
 	if err != nil {
 		log.Error("failed to reset state", "error", err)
-		return tgbotapi.NewCallback(query.ID, "Произошла ошибка")
+		return tgbotapi.NewCallback(query.ID, messages.Error())
 	}
 
 	log.Info("staff member created successfully")
 	return tgbotapi.NewEditMessageTextAndMarkup(
 		query.Message.Chat.ID,
 		query.Message.MessageID,
-		"Сотрудник добавлен",
+		messages.StaffAdded(),
 		keyboards.EmptyInlineKeyboard(),
 	)
 }
