@@ -32,11 +32,53 @@ func (m *msg) State(ctx context.Context, msg tgbotapi.MessageConfig, state model
 		return m.stateStaffRegisterPhoneNumber(ctx, msg)
 	case models.StateSearchLastName:
 		return m.stateSearchLastName(ctx, msg)
+	case models.StateSearchPhoneNumber:
+		return m.stateSearchPhoneNumber(ctx, msg)
 	default:
 		log.Warn("unknown state encountered")
 		msg.Text = "Произошла ошибка"
 		return msg
 	}
+}
+
+func (m *msg) stateSearchPhoneNumber(ctx context.Context, msg tgbotapi.MessageConfig) tgbotapi.MessageConfig {
+	log := logger.SetupLogger(m.log,
+		"service_message", "stateSearchPhoneNumber",
+		"chat_id", msg.ChatID,
+		"text", msg.Text,
+	)
+	log.Info("processing staff search by phone number")
+
+	phoneNumber := strings.TrimSpace(msg.Text)
+	re := regexp.MustCompile(`^[1-9]\d{1,14}$`)
+	if !re.MatchString(msg.Text) {
+		log.Warn("invalid phone number format")
+		msg.Text = messages.InvalidPhoneFormat()
+		return msg
+	}
+
+	err := m.stateService.RemoveState(ctx, msg.ChatID)
+	if err != nil {
+		log.Error("failed to remove state", "error", err)
+		msg.Text = messages.Error()
+		return msg
+	}
+
+	staffList, err := m.staffService.GetListByPhoneOrLastName(ctx, phoneNumber, "")
+	if err != nil {
+		if errors.Is(err, apperrors.ErrNotFoundStaff) {
+			log.Warn("no staff found for phone number", "phone_number", phoneNumber)
+			msg.Text = messages.StaffNotFound()
+			return msg
+		}
+		log.Error("failed to retrieve staff list", "error", err)
+		msg.Text = messages.Error()
+		return msg
+	}
+
+	log.Info("staff list retrieved successfully", "count", len(staffList), "phone_number", phoneNumber)
+	msg.Text = messages.StaffList(staffList)
+	return msg
 }
 
 func (m *msg) stateSearchLastName(ctx context.Context, msg tgbotapi.MessageConfig) tgbotapi.MessageConfig {

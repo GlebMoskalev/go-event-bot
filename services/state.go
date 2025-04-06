@@ -16,4 +16,5 @@ type State interface {
 	ConfirmAddStaff(ctx context.Context, chatID int64) error
 
 	StartSearchByLastName(ctx context.Context, chatID int64) error
+	StartSearchByPhoneNumber(ctx context.Context, chatID int64) error
 }

@@ -19,7 +19,7 @@ func (c *callback) SearchStaffByLastName(ctx context.Context, query *tgbotapi.Ca
 	err := c.stateService.StartSearchByLastName(ctx, query.Message.Chat.ID)
 	if err != nil {
 		log.Error("failed to set state", "error", err)
-		return tgbotapi.NewCallback(query.ID, messages.StaffAdditionMissing())
+		return tgbotapi.NewCallback(query.ID, messages.Error())
 	}
 
 	log.Info("state set successfully, requesting last name")
@@ -27,6 +27,29 @@ func (c *callback) SearchStaffByLastName(ctx context.Context, query *tgbotapi.Ca
 		query.Message.Chat.ID,
 		query.Message.MessageID,
 		messages.RequestFullName(),
+		keyboards.EmptyInlineKeyboard(),
+	)
+}
+
+func (c *callback) SearchStaffByPhoneNumber(ctx context.Context, query *tgbotapi.CallbackQuery) tgbotapi.Chattable {
+	log := logger.SetupLogger(c.log,
+		"service_callback", "SearchStaffByPhoneNumber",
+		"chat_id", query.Message.Chat.ID,
+		"query_id", query.ID,
+	)
+	log.Info("initiating staff search by phone number")
+
+	err := c.stateService.StartSearchByPhoneNumber(ctx, query.Message.Chat.ID)
+	if err != nil {
+		log.Error("failed to set state", "error", err)
+		return tgbotapi.NewCallback(query.ID, messages.Error())
+	}
+
+	log.Info("state set successfully, requesting phone number")
+	return tgbotapi.NewEditMessageTextAndMarkup(
+		query.Message.Chat.ID,
+		query.Message.MessageID,
+		messages.RequestPhoneNumber(),
 		keyboards.EmptyInlineKeyboard(),
 	)
 }

@@ -67,6 +67,13 @@ func (h *handler) Callbacks(ctx context.Context, tgbot *tgbotapi.BotAPI, update 
 			log.Error("failed to send back to events message", "error", err)
 			return
 		}
+	} else if split[0] == models.StaffContext && split[1] == models.SearchContext && split[2] == models.PhoneNumberContext {
+		msg := h.callback.SearchStaffByPhoneNumber(ctx, update.CallbackQuery)
+		_, err := tgbot.Request(msg)
+		if err != nil {
+			log.Error("failed to send back to events message", "error", err)
+			return
+		}
 	} else if split[0] == "null" {
 		log.Info("callback null data received")
 	} else {

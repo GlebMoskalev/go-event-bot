@@ -38,14 +38,6 @@ var BotCommands = map[models.Role][]tgbotapi.BotCommand{
 	},
 	models.RoleAdmin: {
 		{
-			Command:     CmdAdminPanel,
-			Description: "Панель администратора",
-		},
-		{
-			Command:     CmdChangeEvent,
-			Description: "Изменить расписание",
-		},
-		{
 			Command:     CmdAddStaff,
 			Description: "Добавить сотрудника",
 		},

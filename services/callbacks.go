@@ -11,4 +11,5 @@ type Callback interface {
 	CancelAddStaff(ctx context.Context, query *tgbotapi.CallbackQuery) tgbotapi.Chattable
 	AppendStaff(ctx context.Context, query *tgbotapi.CallbackQuery) tgbotapi.Chattable
 	SearchStaffByLastName(ctx context.Context, query *tgbotapi.CallbackQuery) tgbotapi.Chattable
+	SearchStaffByPhoneNumber(ctx context.Context, query *tgbotapi.CallbackQuery) tgbotapi.Chattable
 }
